@@ -54,7 +54,10 @@ export function displayWorks(works) {
 /**
  * Displays an error message inside the gallery container.
  * 
- * @function
+ * Creates a <p> element with the specified error message and appends it
+ * to the gallery section of the DOM. Uses the utility function `createElement`.
+ * 
+ * @function displayError
  * @param {string} message - The error message to display.
  */
 export function displayError(message) {

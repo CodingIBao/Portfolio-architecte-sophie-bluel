@@ -2,11 +2,14 @@ import { displayError } from "./dom.js";
 
 /**
  * Fetches JSON data from a given API URL.
+ *
+ * Attempts to retrieve data from the specified endpoint and returns it as an array of objects.
+ * If an error occurs (HTTP error or network failure), an error message is displayed and an empty array is returned.
  * 
  * @async
- * @function
+ * @function fetchData
  * @param {string} url - The API endpoint to fetch data from.
- * @returns {Promise<Object[]|[]>} - The fetched data as an array of objects, or an empty array if an error occurs.
+ * @returns {Promise<Object[]|[]>} A promise that resolves to an array of data objects, or an empty array if the request fails.
  */
 export async function fetchData(url) {
   try {
