@@ -23,7 +23,7 @@ import { displayFilters } from "./scripts/dom.js";
   //   ...new Map(works.map(work => [work.category.id, work.category])).values()
   // ];
 
-  displayFilters(uniqueCategories)
+  displayFilters(uniqueCategories, works);
 
   displayWorks(works);
 })();
