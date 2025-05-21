@@ -30,6 +30,7 @@ footer, header, hgroup, menu, nav, section {
 }
 body {
 	line-height: 1;
+	background-color: #FFFEF8;
 }
 ol, ul {
 	list-style: none;
@@ -125,6 +126,37 @@ li:hover {
 	text-align: center;
 	margin-bottom: 1em;
 }
+
+/************* FILTERS ***********/
+#filters {
+	display: flex;
+	justify-content: center;
+	gap: 10px;
+	padding: 32px 0 47px 0;
+}
+
+#filters button {
+	background-color: #FFFEF8;
+	border: 1px solid #1D6154;
+	border-radius: 60px;
+	color: #1D6154;
+	font-family: 'Syne';
+	font-size: 16px;
+	font-weight: 700;
+	padding: 10px 26px;
+}
+
+#filters button:hover {
+	background-color: #1D6154;
+	color: #FFFEF8;
+	cursor: pointer;
+}
+
+#filters button.active {
+	background-color: #1D6154;
+	color: #FFFEF8;
+}
+
 .gallery {
 	width: 100%;
 	display: grid;

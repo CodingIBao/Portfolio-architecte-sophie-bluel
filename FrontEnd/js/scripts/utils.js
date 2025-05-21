@@ -1,6 +1,3 @@
-
-// scripts/utils.js
-
 /**
  * Returns a list of unique categories from a list of works.
  * 

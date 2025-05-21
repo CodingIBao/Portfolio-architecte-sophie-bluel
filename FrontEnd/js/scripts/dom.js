@@ -10,6 +10,26 @@
 const gallery = document.querySelector(".gallery");
 
 /**
+ * Displays filter buttons based on category data.
+ * 
+ * @param {Object[]} categories - Array of category objects.
+ */
+export function displayFilters(categories) {
+  const filtersContainer = document.getElementById("filters")
+  const allButton = document.createElement("button");
+  allButton.textContent = "Tous";
+  allButton.dataset.categoryId ="all";
+  filtersContainer.appendChild(allButton);
+  
+  categories.forEach(category => {
+    const button = document.createElement("button");
+    button.textContent = category.name;
+    button.dataset.categoryId = category.id;
+    filtersContainer.appendChild(button);
+  });
+}
+
+/**
  * Creates an HTML element with optional attributes and text content.
  * 
  * @function
