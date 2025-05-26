@@ -24,23 +24,25 @@ function setActiveFilter(activeButton, container) {
 export function displayFilters(categories, works) {
   const filtersContainer = document.getElementById("filters")
 
-  const allButton = document.createElement("button");
-  allButton.textContent = "Tous";
-  allButton.dataset.categoryId ="all";
+  const allButton = createElement("button", {
+    "data-category-id": "all"
+  }, "Tous");
   filtersContainer.appendChild(allButton);
 
   allButton.addEventListener("click", () => {
+    setActiveFilter(allButton, filterContainer);
     displayWorks(works);
   });
   
   categories.forEach(category => {
-    const button = document.createElement("button");
-    button.textContent = category.name;
-    button.dataset.categoryId = category.id;
+    const button = createElement("button", {
+      "data-category-id": category.id
+    }, category.name);
     filtersContainer.appendChild(button);
 
     button.addEventListener("click", () => {
       const filteredWorks = works.filter(work => work.category.id === category.id);
+      setActiveFilter(button, filtersContainer);
       displayWorks(filteredWorks);
     });
   });
