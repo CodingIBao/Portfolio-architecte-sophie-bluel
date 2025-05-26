@@ -24,13 +24,20 @@ function setActiveFilter(activeButton, container) {
 export function displayFilters(categories, works) {
   const filtersContainer = document.getElementById("filters")
 
+  const updateURL = (categoryId) => {
+    const url = new URL(window.location);
+    url.searchParams.set("category", categoryId);
+    window.history.pushState({}, "", url);
+  };
+
   const allButton = createElement("button", {
     "data-category-id": "all"
   }, "Tous");
   filtersContainer.appendChild(allButton);
 
   allButton.addEventListener("click", () => {
-    setActiveFilter(allButton, filterContainer);
+    setActiveFilter(allButton, filtersContainer);
+    updateURL("all");
     displayWorks(works);
   });
   
@@ -43,9 +50,23 @@ export function displayFilters(categories, works) {
     button.addEventListener("click", () => {
       const filteredWorks = works.filter(work => work.category.id === category.id);
       setActiveFilter(button, filtersContainer);
+      updateURL(category.id);
       displayWorks(filteredWorks);
     });
   });
+
+  const params = new URLSearchParams(window.location.search);
+  const selectedCategory = params.get("category");
+  const buttons = filtersContainer.querySelectorAll("button");
+  const activeButton = Array.from(buttons).find(
+    btn => btn.dataset.categoryId === selectedCategory
+  );
+
+  if (activeButton) {
+    activeButton.click();
+  } else {
+    allButton.click();
+  }
 }
 
 /**
