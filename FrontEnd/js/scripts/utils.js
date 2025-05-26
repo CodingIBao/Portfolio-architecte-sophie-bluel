@@ -9,9 +9,9 @@ export function getUniqueCategories(works) {
   const uniqueCategoryIds = new Set();
 
   const uniqueCategories = allCategories.filter(category => {
-  const isDuplicate = uniqueCategoryIds.has(category.id);
-  uniqueCategoryIds.add(category.id);
-  return !isDuplicate;
+    const isDuplicate = uniqueCategoryIds.has(category.id);
+    uniqueCategoryIds.add(category.id);
+    return !isDuplicate;
   });
 
   return uniqueCategories;

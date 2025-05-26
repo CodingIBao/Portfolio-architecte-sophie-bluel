@@ -18,11 +18,6 @@ import { displayFilters } from "./scripts/dom.js";
 
   const uniqueCategories = getUniqueCategories(works);
 
-  // Version concise 'Map'
-  // const uniqueCategories = [
-  //   ...new Map(works.map(work => [work.category.id, work.category])).values()
-  // ];
-
   displayFilters(uniqueCategories, works);
 
   displayWorks(works);

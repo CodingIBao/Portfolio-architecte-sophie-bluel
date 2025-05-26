@@ -25,13 +25,13 @@ export async function fetchData(url) {
         userMessage = "Le serveur rencontre un problème. Merci de patienter.";
       }
 
-      displayError(`ERREUR ${errorCode} - ${userMessage}`);
-      return [];
+      throw new Error(`ERREUR ${errorCode} - ${userMessage}`);
     }
 
     return await response.json();
-  } catch {
-    displayError("Une erreur réseau est survenue. Veuillez vérifier votre connexion.");
+
+  } catch (error){
+    displayError(error.message || "Une erreur réseau est survenue. Veuillez vérifier votre connexion.");
     return [];
   }
 }
