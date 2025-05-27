@@ -1,8 +1,13 @@
 /**
  * Main entry point of the application.
  * 
- * - Fetches project data from the API.
- * - Dynamically displays the projects in the gallery.
+ * Initializes the app by:
+ * - Fetching project data from the API.
+ * - Extracting unique categories.
+ * - Displaying the category filters.
+ * - Rendering the project gallery.
+ * 
+ * This module runs an asynchronous IIFE to bootstrap the UI.
  * 
  * @module main
  */

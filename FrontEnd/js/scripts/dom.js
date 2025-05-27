@@ -9,6 +9,17 @@
 
 const gallery = document.querySelector(".gallery");
 
+/**
+ * Sets the active filter button by updating the "active" CSS class.
+ *
+ * Removes the "active" class from all buttons in the container,
+ * then applies it to the specified active button.
+ *
+ * @private
+ * @function setActiveFilter
+ * @param {HTMLButtonElement} activeButton - The button to set as active.
+ * @param {HTMLElement} container - The container holding all filter buttons.
+ */
 function setActiveFilter(activeButton, container) {
   const buttons = container.querySelectorAll("button");
   buttons.forEach(btn => btn.classList.remove("active"));
@@ -18,8 +29,9 @@ function setActiveFilter(activeButton, container) {
 /**
  * Displays filter buttons based on category data.
  * 
- * @param {Object[]} categories - Array of category objects.
- * @param {Object[]} works - All works fetched from the API.
+ * @function displayFilters
+ * @param {Object[]} categories - Array of category objects (e.g., { id, name }).
+ * @param {Object[]} works -  Array of all work objects to be filtered.
  */
 export function displayFilters(categories, works) {
   const filtersContainer = document.getElementById("filters")
@@ -93,7 +105,9 @@ export function createElement(tag, attributes = {}, textContent ="") {
 /**
  * Renders a list of project items into the gallery container.
  * 
- * @function
+ * Each project is rendered as a <figure> with an image and a caption.
+ * 
+ * @function displayWorks
  * @param {Object[]} works - Array of work objects to display.
  * @param {string} works[].imageUrl - The image URL of the project.
  * @param {string} works[].title - The title of the project.
