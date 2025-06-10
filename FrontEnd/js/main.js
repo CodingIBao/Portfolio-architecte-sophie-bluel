@@ -1,29 +1,31 @@
 /**
- * Main entry point of the application.
- * 
- * Initializes the app by:
- * - Fetching project data from the API.
- * - Extracting unique categories.
- * - Displaying the category filters.
- * - Rendering the project gallery.
- * 
- * This module runs an asynchronous IIFE to bootstrap the UI.
- * 
+ * Point d'entrée principal de l'application.
+ *
+ * Initialise l’interface utilisateur en exécutant les étapes suivantes :
+ * - Récupération des projets depuis l'API
+ * - Extraction des catégories uniques
+ * - Affichage des boutons de filtres par catégorie
+ * - Affichage de la galerie de projets (filtrée ou complète)
+ *
+ * Ce module exécute une IIFE asynchrone (fonction immédiatement invoquée)
+ * pour lancer automatiquement l'application dès le chargement du script.
+ *
  * @module main
  */
 
 import { fetchData } from "./scripts/api.js";
-import { displayWorks } from "./scripts/dom.js";
-import { getUniqueCategories } from "./scripts/utils.js";
-import { displayFilters } from "./scripts/dom.js";
+import { displayWorks, displayFilters } from "./scripts/dom.js";
+import { getCategoryNameFromQueryParam, getUniqueCategories, slugify } from "./scripts/utils.js";
 
 (async function init() {
-
   const works = await fetchData("http://localhost:5678/api/works");
+  const categorySlug = getCategoryNameFromQueryParam();
+
+  const filteredWorks = categorySlug
+    ? works.filter(work => slugify(work.category.name) === categorySlug)
+    : works;
 
   const uniqueCategories = getUniqueCategories(works);
-
   displayFilters(uniqueCategories, works);
-
-  displayWorks(works);
+  displayWorks(filteredWorks);
 })();

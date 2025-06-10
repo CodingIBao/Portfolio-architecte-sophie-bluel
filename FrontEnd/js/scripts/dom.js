@@ -1,49 +1,68 @@
+import { slugify } from "./utils.js";
+
 /**
- * DOM manipulation module for displaying projects.
- * 
- * Contains utility functions to create HTML elements
- * and dynamically populate the gallery section.
- * 
+ * Module de manipulation du DOM pour l'affichage des projets.
+ *
+ * Contient des fonctions utilitaires pour créer des éléments HTML
+ * et mettre à jour dynamiquement la galerie d'images.
+ *
  * @module dom
  */
+
 
 const gallery = document.querySelector(".gallery");
 
 /**
- * Sets the active filter button by updating the "active" CSS class.
+ * Définit le bouton de filtre actif en mettant à jour la classe CSS "active".
  *
- * Removes the "active" class from all buttons in the container,
- * then applies it to the specified active button.
+ * Supprime la classe "active" et l’attribut `aria-pressed="true"` de tous les boutons,
+ * puis les applique uniquement au bouton sélectionné.
  *
+ * Utile pour gérer l’accessibilité dans une interface avec des boutons de filtre à sélection unique.
+ *
+ * @param {HTMLButtonElement} activeButton - Le bouton à activer.
+ * @param {HTMLElement} container - Le conteneur qui regroupe tous les boutons de filtre.
  * @private
- * @function setActiveFilter
- * @param {HTMLButtonElement} activeButton - The button to set as active.
- * @param {HTMLElement} container - The container holding all filter buttons.
  */
 function setActiveFilter(activeButton, container) {
   const buttons = container.querySelectorAll("button");
-  buttons.forEach(btn => btn.classList.remove("active"));
+  buttons.forEach(btn => {
+    btn.classList.remove("active");
+    btn.setAttribute("aria-pressed", "false");
+  });
   activeButton.classList.add("active");
+  activeButton.setAttribute("aria-pressed", "true");
 }
 
+
 /**
- * Displays filter buttons based on category data.
- * 
- * @function displayFilters
- * @param {Object[]} categories - Array of category objects (e.g., { id, name }).
- * @param {Object[]} works -  Array of all work objects to be filtered.
+ * Affiche les boutons de filtre à partir d’une liste de catégories.
+ *
+ * Lorsqu’un filtre est cliqué, la galerie est mise à jour avec les projets
+ * correspondant à la catégorie sélectionnée. L’URL est également
+ * mise à jour avec `?category=nom`, pour permettre le partage ou la reprise
+ * de l’état de filtrage.
+ *
+ * @param {Object[]} categories - Liste des catégories (ex. : { id, name }).
+ * @param {Object[]} works - Liste complète des projets à filtrer.
+ *
+ * @example
+ * displayFilters(
+ *   [{ id: 1, name: "Objets" }, { id: 2, name: "Appartements" }],
+ *   works
+ * );
  */
 export function displayFilters(categories, works) {
   const filtersContainer = document.getElementById("filters")
 
-  const updateURL = (categoryId) => {
+  const updateURL = (categorySlug) => {
     const url = new URL(window.location);
-    url.searchParams.set("category", categoryId);
+    url.searchParams.set("category", categorySlug);
     window.history.pushState({}, "", url);
   };
 
   const allButton = createElement("button", {
-    "data-category-id": "all"
+    "data-category-slug": "all"
   }, "Tous");
   filtersContainer.appendChild(allButton);
 
@@ -54,24 +73,26 @@ export function displayFilters(categories, works) {
   });
   
   categories.forEach(category => {
+    const slug = slugify(category.name);
     const button = createElement("button", {
-      "data-category-id": category.id
+      "data-category-slug": slug
     }, category.name);
     filtersContainer.appendChild(button);
 
     button.addEventListener("click", () => {
-      const filteredWorks = works.filter(work => work.category.id === category.id);
+      const filteredWorks = works.filter(work =>
+        slugify(work.category.name) === slug
+      );
       setActiveFilter(button, filtersContainer);
-      updateURL(category.id);
+      updateURL(slug);
       displayWorks(filteredWorks);
     });
   });
 
-  const params = new URLSearchParams(window.location.search);
-  const selectedCategory = params.get("category");
+  const selectedSlug = new URLSearchParams(window.location.search).get("category");
   const buttons = filtersContainer.querySelectorAll("button");
-  const activeButton = Array.from(buttons).find(
-    btn => btn.dataset.categoryId === selectedCategory
+  const activeButton = Array.from(buttons).find(btn =>
+    btn.dataset.categorySlug === (selectedSlug || "all")
   );
 
   if (activeButton) {
@@ -81,14 +102,17 @@ export function displayFilters(categories, works) {
   }
 }
 
+
 /**
- * Creates an HTML element with optional attributes and text content.
- * 
- * @function
- * @param {string} tag - The HTML tag name (e.g., "div", "img", "figcaption").
- * @param {Object} [attributes={}] - An object of key-value pairs for attributes.
- * @param {string} [textContent=""] - Optional text to insert into the element.
- * @returns {HTMLElement} The created DOM element.
+ * Crée dynamiquement un élément HTML avec des attributs et du texte optionnels.
+ *
+ * @param {string} tag - Le nom de la balise HTML (ex. : "div", "img", "figcaption").
+ * @param {Object} [attributes={}] - Objet contenant les paires attribut/valeur à appliquer.
+ * @param {string} [textContent=""] - Texte à insérer dans l’élément (facultatif).
+ * @returns {HTMLElement} L’élément HTML créé.
+ *
+ * @example
+ * const btn = createElement("button", { class: "active" }, "Tous");
  */
 export function createElement(tag, attributes = {}, textContent ="") {
 
@@ -102,15 +126,23 @@ export function createElement(tag, attributes = {}, textContent ="") {
   return element;
 }
 
+
 /**
- * Renders a list of project items into the gallery container.
- * 
- * Each project is rendered as a <figure> with an image and a caption.
- * 
+ * Affiche une liste de projets dans la galerie.
+ *
+ * Chaque projet est affiché sous forme de balise `<figure>` contenant
+ * une image et une légende (`<figcaption>`).
+ *
  * @function displayWorks
- * @param {Object[]} works - Array of work objects to display.
- * @param {string} works[].imageUrl - The image URL of the project.
- * @param {string} works[].title - The title of the project.
+ * @param {Object[]} works - Liste des projets à afficher.
+ * @param {string} works[].imageUrl - URL de l’image du projet.
+ * @param {string} works[].title - Titre du projet.
+ *
+ * @example
+ * displayWorks([
+ *   { imageUrl: "img/chaise.png", title: "Chaise" },
+ *   { imageUrl: "img/table.png", title: "Table" }
+ * ]);
  */
 export function displayWorks(works) {
   gallery.innerHTML = "";
@@ -126,14 +158,18 @@ export function displayWorks(works) {
   });
 }
 
+
 /**
- * Displays an error message inside the gallery container.
- * 
- * Creates a <p> element with the specified error message and appends it
- * to the gallery section of the DOM. Uses the utility function `createElement`.
- * 
+ * Affiche un message d’erreur dans la galerie.
+ *
+ * Crée un paragraphe avec le message fourni et l’insère dans la galerie.
+ * Utilise la fonction utilitaire `createElement`.
+ *
  * @function displayError
- * @param {string} message - The error message to display.
+ * @param {string} message - Le message d’erreur à afficher.
+ *
+ * @example
+ * displayError("Impossible de charger les projets.");
  */
 export function displayError(message) {
 

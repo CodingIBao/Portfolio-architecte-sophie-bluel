@@ -1,15 +1,19 @@
-import { displayError } from "./dom.js";
-
 /**
- * Fetches JSON data from a given API URL.
+ * Récupère des données JSON depuis une URL d’API donnée.
  *
- * Attempts to retrieve data from the specified endpoint and returns it as an array of objects.
- * If an error occurs (HTTP error or network failure), an error message is displayed and an empty array is returned.
- * 
+ * Cette fonction envoie une requête HTTP GET vers l’URL spécifiée et retourne
+ * les données au format JSON si la requête réussit.
+ * En cas d’erreur réseau ou de réponse invalide (statuts 404, 500, etc.),
+ * un message d’erreur est affiché à l’utilisateur et un tableau vide est retourné.
+ *
  * @async
- * @function fetchData
- * @param {string} url - The API endpoint to fetch data from.
- * @returns {Promise<Object[]|[]>} A promise that resolves to an array of data objects, or an empty array if the request fails.
+ * @param {string} url - L’URL de l’API à interroger.
+ * @returns {Promise<Object[]>} Une promesse résolue avec un tableau d’objets JSON,
+ * ou un tableau vide en cas d’erreur.
+ *
+ * @example
+ * const works = await fetchData("http://localhost:5678/api/works");
+ * // Résultat : [{ id: 1, title: "Projet 1", ... }, ...]
  */
 export async function fetchData(url) {
   try {

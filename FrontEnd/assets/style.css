@@ -76,7 +76,6 @@ h1 > span {
 	font-family: 'Work Sans';
 	font-size:10px;
 	letter-spacing: 0.1em;
-;
 }
 
 h2{
@@ -89,7 +88,6 @@ nav ul {
 	display: flex;
 	align-items: center;
 	list-style-type: none;
-
 }
 nav li {
 	padding: 0 10px;
@@ -157,6 +155,8 @@ li:hover {
 	color: #FFFEF8;
 }
 
+
+/************* GALLERY ***********/
 .gallery {
 	width: 100%;
 	display: grid;
@@ -169,6 +169,8 @@ li:hover {
 	width: 100%;
 
 }
+
+/************* CONTACT ***********/
 #contact {
 	width: 50%;
 margin: auto;
@@ -212,6 +214,7 @@ input[type="submit"]{
 	border-radius: 60px ;
 }
 
+/************* FOOTER ***********/
 footer {
 	background-color: white;
 }
@@ -219,6 +222,6 @@ footer {
 footer nav ul {
 	display: flex;
 	justify-content: flex-end;
-	margin: 2em
+	margin: 2em;
 }
 
