@@ -12,16 +12,18 @@
  *
  * @example
  * const works = [
- *   { id: 1, title: "Projet A", category: { id: 1, name: "Salon" } },
- *   { id: 2, title: "Projet B", category: { id: 2, name: "Cuisine" } },
- *   { id: 3, title: "Projet C", category: { id: 1, name: "Salon" } }
+ *   { id: 1, title: "Abajour Tahina", category: { id: 1, name: "Objets" } },
+ *   { id: 2, title: "Appartement Paris V", category: { id: 2, name: "Appartements" } },
+ *   { id: 3, title: "Restaurant Sushisen - Londres", category: { id: 3, name: "Hotels & restaurants" } },
+ *   { id: 4, title: "Villa “La Balisiere” - Port Louis", category: { id: 2, name: "Appartements" } }
  * ];
  *
  * const uniqueCategories = getUniqueCategories(works);
  * // Résultat :
  * // [
- * //   { id: 1, name: "Salon" },
- * //   { id: 2, name: "Cuisine" }
+ * //   { id: 1, name: "Objets" },
+ * //   { id: 2, name: "Appartements" }
+ * //   { id: 3, name: "Hotels & restaurants" }
  * // ]
  */
 export function getUniqueCategories(works) {
