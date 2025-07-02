@@ -1,23 +1,17 @@
 /**
- * Gère la soumission du formulaire de connexion.
+ * @file login.js
+ * Gère la logique de connexion utilisateur depuis la page de login.
  *
- * Empêche le comportement par défaut du navigateur (rechargement de page),
- * récupère les valeurs des champs email et mot de passe, et envoie une
- * requête POST à l’API d’authentification. Si la réponse est valide, le
- * token JWT renvoyé est stocké dans le localStorage pour permettre
- * l’accès aux fonctionnalités réservées aux utilisateurs connectés.
- * En cas d’erreur (identifiants invalides ou problème réseau),
- * un message est affiché sous le formulaire.
- *
- * @event submit
- * @param {SubmitEvent} e - L’événement déclenché lors de la soumission du formulaire.
- *
- * @example
- * // L'utilisateur saisit ses identifiants dans le formulaire,
- * // clique sur "Se connecter" et, si les informations sont valides,
- * // il est redirigé vers la page d’accueil avec un token enregistré.
+ * Ce module :
+ * - Intercepte la soumission du formulaire de connexion
+ * - Envoie une requête POST à l’API pour authentifier l’utilisateur
+ * - Stocke le token JWT dans le localStorage si la connexion est réussie
+ * - Redirige l’utilisateur vers la page d’accueil (index.html)
+ * - Affiche un message d’erreur dans le DOM si la connexion échoue
  */
-document.getElementById("login-form").addEventListener("submit", async(e) => {
+import { fetchData } from "./api.js";
+
+document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const email = document.getElementById("email").value;
@@ -27,22 +21,23 @@ document.getElementById("login-form").addEventListener("submit", async(e) => {
   errorElement.textContent = "";
 
   try {
-    const response = await fetch("http://localhost:5678/api/users/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password })
-    })
+    const data = await fetchData(
+      "http://localhost:5678/api/users/login",
+      "POST",
+      { "Content-Type": "application/json" },
+      { email, password }
+    );
 
-    if (!response.ok) throw new Error("Identifiant ou mot de passe incorrecte");
-
-    const data = await response.json();
-    const token = data.token;
-
-    localStorage.setItem("token", token);
+    localStorage.setItem("token", data.token);
     window.location.href = "index.html";
+
   } catch (error) {
-    errorElement.textContent = error.message;
+    if (error.message.includes("404")) {
+      errorElement.textContent = "Adresse email introuvable.";
+    } else if (error.message.includes("401")) {
+      errorElement.textContent = "Mot de passe incorrect.";
+    } else {
+      errorElement.textContent = "Une erreur est survenue. Veuillez réessayer plus tard.";
+    }
   }
 });

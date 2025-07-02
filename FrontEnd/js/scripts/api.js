@@ -1,41 +1,41 @@
 /**
- * Récupère des données JSON depuis une URL d’API donnée.
+ * Effectue une requête HTTP vers une API avec gestion des erreurs.
  *
- * Cette fonction envoie une requête HTTP GET vers l’URL spécifiée et retourne
- * les données au format JSON si la requête réussit.
- * En cas d’erreur réseau ou de réponse invalide (statuts 404, 500, etc.),
- * un message d’erreur est affiché à l’utilisateur et un tableau vide est retourné.
+ * Peut être utilisée pour des requêtes GET, POST, PUT, DELETE.
+ * Gère les réponses incorrectes en lançant une erreur explicite.
  *
  * @async
- * @param {string} url - L’URL de l’API à interroger.
- * @returns {Promise<Object[]>} Une promesse résolue avec un tableau d’objets JSON,
- * ou un tableau vide en cas d’erreur.
- *
- * @example
- * const works = await fetchData("http://localhost:5678/api/works");
- * // Résultat : [{ id: 1, title: "Projet 1", ... }, ...]
+ * @param {string} url - L'URL à interroger.
+ * @param {string} [method="GET"] - La méthode HTTP (GET, POST, etc.).
+ * @param {Object} [headers={}] - Les en-têtes HTTP à envoyer.
+ * @param {Object|null} [body=null] - Les données à envoyer (pour POST, PUT...).
+ * @returns {Promise<Object>} - La réponse convertie en JSON.
+ * @throws {Error} - En cas de statut HTTP non 2xx ou d'erreur réseau.
  */
-export async function fetchData(url) {
+export async function fetchData(url, method = "GET", headers = {}, body = null) {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : null,
+    });
 
     if (!response.ok) {
       const errorCode = response.status;
-      let userMessage = "Impossible de charger les projets. Veuillez réessayer ultérieurement.";
+      let message = "Une erreur est survenue.";
 
-      if (errorCode === 404) {
-        userMessage = "Les données demandées sont introuvables.";
-      } else if (errorCode === 500) {
-        userMessage = "Le serveur rencontre un problème. Merci de patienter.";
-      }
+      if (errorCode === 400) message = "Requête invalide.";
+      else if (errorCode === 401) message = "Accès non autorisé.";
+      else if (errorCode === 404) message = "Ressource introuvable.";
+      else if (errorCode === 500) message = "Erreur interne du serveur.";
 
-      throw new Error(`ERREUR ${errorCode} - ${userMessage}`);
+      throw new Error(`ERREUR ${errorCode} - ${message}`);
     }
 
     return await response.json();
 
-  } catch (error){
-    displayError(error.message || "Une erreur réseau est survenue. Veuillez vérifier votre connexion.");
-    return [];
+  } catch (error) {
+    console.error("[API]", error.message);
+    throw error;
   }
 }

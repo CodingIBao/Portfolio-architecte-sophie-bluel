@@ -172,7 +172,7 @@ export function displayWorks(works) {
  * displayError("Impossible de charger les projets.");
  */
 export function displayError(message) {
-
+  gallery.innerHTML = "";
   const errorElement = createElement("p", {class: "error-message"}, message);
   gallery.appendChild(errorElement);
 }

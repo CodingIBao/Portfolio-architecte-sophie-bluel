@@ -14,18 +14,23 @@
  */
 
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayError } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, slugify } from "./scripts/utils.js";
 
 (async function init() {
-  const works = await fetchData("http://localhost:5678/api/works");
-  const categorySlug = getCategoryNameFromQueryParam();
+  try {
+    const works = await fetchData("http://localhost:5678/api/works");
 
-  const filteredWorks = categorySlug
-    ? works.filter(work => slugify(work.category.name) === categorySlug)
-    : works;
+    const categorySlug = getCategoryNameFromQueryParam();
+    const filteredWorks = categorySlug
+      ? works.filter(work => slugify(work.category.name) === categorySlug)
+      : works;
 
-  const uniqueCategories = getUniqueCategories(works);
-  displayFilters(uniqueCategories, works);
-  displayWorks(filteredWorks);
+    const uniqueCategories = getUniqueCategories(works);
+    displayFilters(uniqueCategories, works);
+    displayWorks(filteredWorks);
+  } catch (error) {
+    displayError("Impossible de charger les projets. Veuillez réessayer plus tard.");
+    console.error("[main.js]", error.message);
+  }
 })();

@@ -246,3 +246,11 @@ footer nav ul {
 	justify-content: flex-end;
 	margin: 2em;
 }
+
+/* ERROR MESSAGE */
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 1rem;
+  text-align: center;
+}
