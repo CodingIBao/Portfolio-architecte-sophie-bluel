@@ -43,3 +43,10 @@
 	color: #3D3D3D;
 	font-weight: 500;
 }
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 1rem;
+  text-align: center;
+}

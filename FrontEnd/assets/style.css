@@ -51,18 +51,30 @@ table {
 body {
 	max-width: 1140px;
 	margin:auto;
-	font-family: 'Work Sans' ;
+	font-family: 'Work Sans';
 	font-size: 14px;
 }
 header {
 	display: flex;
 	justify-content: space-between;
-	margin: 50px 0
+	margin: 50px 0 138px 0;
 }
 section {
-	margin: 50px 0
+	margin: 50px 0;
 }
 
+
+/************* LINK ***********/
+.link-page {
+	text-decoration: none;
+	color: black;
+}
+.link-page:visited {
+	color: black;
+}
+.link-page:hover {
+	color: #B1663C;
+}
 
 /************* HEADER ***********/
 h1{
@@ -71,7 +83,7 @@ h1{
 	font-family: 'Syne';
 	font-size: 22px;
 	font-weight: 800;
-	color: #B1663C
+	color: #B1663C;
 }
 
 h1 > span {
@@ -84,7 +96,7 @@ h2{
 	font-family: 'Syne';
 	font-weight: 700;
 	font-size: 30px;
-	color: #1D6154
+	color: #1D6154;
 }
 
 /************* NAV ***********/
@@ -92,19 +104,15 @@ nav ul {
 	display: flex;
 	align-items: center;
 	list-style-type: none;
+	gap: 42px;
 }
 nav li {
-	padding: 0 10px;
 	font-size: 1.2em;
 }
 
-li:hover {
-	color: #B1663C;
-}
-
-#link-logo-insta {
-	width: 22px;
-	height: 22px;
+.link-logo-insta img {
+	width: 19px;
+	height: auto;
 }
 
 #introduction {
@@ -129,6 +137,9 @@ li:hover {
 
 #introduction p {
 	margin-bottom: 0.5em;
+}
+#portfolio {
+	margin-top: 9em;
 }
 #portfolio h2 {
 	text-align: center;
@@ -177,7 +188,6 @@ li:hover {
 
 .gallery img {
 	width: 100%;
-
 }
 
 /************* CONTACT ***********/
@@ -193,10 +203,12 @@ margin: auto;
 	margin-bottom: 20px;
 }
 #contact form {
+	margin: 0 auto;
 	text-align: left;
-	margin-top:30px;
+	margin-top: 30px;
 	display: flex;
 	flex-direction: column;
+	max-width: 500px;
 }
 
 #contact input {
