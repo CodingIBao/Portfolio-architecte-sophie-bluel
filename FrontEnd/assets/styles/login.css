@@ -1,5 +1,9 @@
 /*********** PAGE LOGIN ************/
-
+html, body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
 /********** HEADER **********/
 #link-login {
@@ -9,6 +13,10 @@
 }
 
 /********** MAIN **********/
+main {
+  flex: 1;
+}
+
 /********** FORMULAIRE **********/
 .login-section h2 {
   text-align: center;
