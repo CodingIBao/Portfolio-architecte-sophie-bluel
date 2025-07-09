@@ -49,20 +49,12 @@ table {
 }
 /** end reset css**/
 body {
-	max-width: 1140px;
-	margin:auto;
 	font-family: 'Work Sans';
 	font-size: 14px;
-}
-header {
-	display: flex;
-	justify-content: space-between;
-	margin: 50px 0 138px 0;
 }
 section {
 	margin: 50px 0;
 }
-
 
 /************* LINK ***********/
 .link-page {
@@ -77,6 +69,13 @@ section {
 }
 
 /************* HEADER ***********/
+.header-container {
+	display: flex;
+	justify-content: space-between;
+	max-width: 1140px;
+	margin: 48px auto 138px auto;
+}
+
 h1{
 	display: flex;
 	flex-direction: column;
@@ -118,14 +117,16 @@ nav li {
 #introduction {
 	display: flex;
 	align-items: center;
+	gap: 4em;
+	max-width: 952px;
+	margin: 0 auto 138px auto;
 }
 #introduction figure {
 	flex: 1
 }
 #introduction img {
 	display: block;
-	margin: auto;
-	width: 80%;
+	width: 100%;
 }
 
 #introduction article {
@@ -136,10 +137,12 @@ nav li {
 }
 
 #introduction p {
-	margin-bottom: 0.5em;
+	margin: 0 auto 0.9em auto;
+	color: #3D3D3D;
 }
 #portfolio {
-	margin-top: 9em;
+	max-width: 952px;
+	margin: auto;
 }
 #portfolio h2 {
 	text-align: center;
@@ -176,7 +179,6 @@ nav li {
 	color: #FFFEF8;
 }
 
-
 /************* GALLERY ***********/
 .gallery {
 	width: 100%;
@@ -185,33 +187,38 @@ nav li {
 	grid-column-gap: 20px;
 	grid-row-gap: 20px;
 }
-
 .gallery img {
 	width: 100%;
+}
+.gallery figure figcaption {
+	color: #3D3D3D;
 }
 
 /************* CONTACT ***********/
 #contact {
+	max-width: 379px;
 	width: 50%;
-margin: auto;
+	margin: 54px auto 0 auto;
 }
 #contact > * {
 	text-align: center;
+	color: #3D3D3D;
 
 }
 #contact h2{
 	margin-bottom: 20px;
+	color: #1D6154;
 }
 #contact form {
 	margin: 0 auto;
 	text-align: left;
-	margin-top: 30px;
 	display: flex;
 	flex-direction: column;
 	max-width: 500px;
 }
 
-#contact input {
+#contact input[type="text"],
+#contact input[type="email"] {
 	height: 50px;
 	font-size: 1.2em;
 	border: none;
@@ -219,13 +226,17 @@ margin: auto;
 }
 #contact label {
 	margin: 2em 0 1em 0;
+	color: #3D3D3D;
 }
 #contact textarea {
 	border: none;
 	box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
 }
+#contact input[type="submit"] {
+	height: 36px;
+}
 
-input[type="submit"]{
+input[type="submit"] {
 	font-family: 'Syne';
 	font-weight: 700;
 	color: white;
@@ -233,21 +244,36 @@ input[type="submit"]{
 	margin : 2em auto ;
 	width: 180px;
 	text-align: center;
-	border-radius: 60px ;
+	border-radius: 60px;
+	border: none;
+	box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
+	cursor: pointer;
+}
+input[type="submit"]:hover {
+	transition: background-color 0.3s ease;
+	background-color: #0E2F28;
 }
 
 /************* FOOTER ***********/
 footer {
 	background-color: white;
 }
-
+footer nav {
+	max-width: 1260px;
+	margin: auto;
+	padding: 22px 0;
+}
 footer nav ul {
 	display: flex;
 	justify-content: flex-end;
-	margin: 2em;
+}
+footer .link-page {
+	font-size: 14px;
+	font-weight: 300;
 }
 
-/* ERROR MESSAGE */
+
+/************* ERROR MESSAGE ***********/
 .error-message {
   color: red;
   font-size: 14px;

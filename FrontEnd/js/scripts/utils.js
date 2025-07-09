@@ -80,3 +80,8 @@ export function slugify(text) {
     .replace(/[^\w-]/g, "")  // supprime tout ce qui n’est pas alphanum ou tiret
     .trim();
 }
+
+
+export function isLogIn() {
+  return localStorage.getItem("token");
+}

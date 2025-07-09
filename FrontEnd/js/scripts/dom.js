@@ -176,3 +176,13 @@ export function displayError(message) {
   const errorElement = createElement("p", {class: "error-message"}, message);
   gallery.appendChild(errorElement);
 }
+
+
+function replaceLogInLink(isAuth) {
+  if (!isAuth) return; 
+  document.getElementById("log").textContent = "logout"
+}
+
+export function domModificationLogIn(isAuth) {
+  replaceLogInLink(isAuth)
+}

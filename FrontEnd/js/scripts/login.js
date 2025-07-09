@@ -3,6 +3,7 @@
  * Gère la logique de connexion utilisateur depuis la page de login.
  *
  * Ce module :
+ * - Nettoie et valide les données saisies
  * - Intercepte la soumission du formulaire de connexion
  * - Envoie une requête POST à l’API pour authentifier l’utilisateur
  * - Stocke le token JWT dans le localStorage si la connexion est réussie
@@ -14,11 +15,23 @@ import { fetchData } from "./api.js";
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
   const errorElement = document.getElementById("login-error");
-
   errorElement.textContent = "";
+
+  // Sanitize + validate
+  let email = document.getElementById("email").value.trim().toLowerCase();
+  let password = document.getElementById("password").value.trim();
+
+  if (!email || !password) {
+    errorElement.textContent = "Veuillez remplir tous les champs.";
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    errorElement.textContent = "Adresse email invalide.";
+    return;
+  }
 
   try {
     const data = await fetchData(
@@ -32,12 +45,6 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     window.location.href = "index.html";
 
   } catch (error) {
-    if (error.message.includes("404")) {
-      errorElement.textContent = "Adresse email introuvable.";
-    } else if (error.message.includes("401")) {
-      errorElement.textContent = "Mot de passe incorrect.";
-    } else {
-      errorElement.textContent = "Une erreur est survenue. Veuillez réessayer plus tard.";
-    }
+    errorElement.textContent = "Identifants incorrects. Veuillez réessayer.";
   }
 });
