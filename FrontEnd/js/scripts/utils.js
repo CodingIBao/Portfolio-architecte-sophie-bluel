@@ -83,5 +83,15 @@ export function slugify(text) {
 
 
 export function isLogIn() {
-  return localStorage.getItem("token");
+  return !!localStorage.getItem("token");
+}
+
+export function logOut(isAuth) {
+  const logOut = document.getElementById("link-login");
+  if (!logOut || !isAuth) return;
+  logOut.addEventListener("click", (e)=> {
+    e.preventDefault();
+    localStorage.removeItem("token");
+    window.location.replace("./login.html");
+  })
 }

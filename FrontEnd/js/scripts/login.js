@@ -11,6 +11,8 @@
  * - Affiche un message d’erreur dans le DOM si la connexion échoue
  */
 import { fetchData } from "./api.js";
+import { logOut, isLogIn, } from "./utils.js";
+import { domModificationLogIn } from "./dom.js";
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -18,7 +20,6 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   const errorElement = document.getElementById("login-error");
   errorElement.textContent = "";
 
-  // Sanitize + validate
   let email = document.getElementById("email").value.trim().toLowerCase();
   let password = document.getElementById("password").value.trim();
 
@@ -48,3 +49,9 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     errorElement.textContent = "Identifants incorrects. Veuillez réessayer.";
   }
 });
+
+(async function init() {
+  const isAuth = isLogIn();
+  logOut(isAuth);
+  domModificationLogIn(isAuth);
+})();

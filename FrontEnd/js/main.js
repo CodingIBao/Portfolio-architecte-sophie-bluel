@@ -15,11 +15,12 @@
 
 import { fetchData } from "./scripts/api.js";
 import { displayWorks, displayFilters, displayError, domModificationLogIn } from "./scripts/dom.js";
-import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, slugify } from "./scripts/utils.js";
+import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 (async function init() {
   try {
     const isAuth = isLogIn();
+    logOut(isAuth);
     domModificationLogIn(isAuth);
     const works = await fetchData("http://localhost:5678/api/works");
 

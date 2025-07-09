@@ -180,7 +180,7 @@ export function displayError(message) {
 
 function replaceLogInLink(isAuth) {
   if (!isAuth) return; 
-  document.getElementById("log").textContent = "logout"
+  document.getElementById("link-login").textContent = "logout"
 }
 
 export function domModificationLogIn(isAuth) {
