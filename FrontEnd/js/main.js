@@ -14,14 +14,19 @@
  */
 
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayError, domModificationLogIn } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 (async function init() {
   try {
     const isAuth = isLogIn();
-    logOut(isAuth);
-    domModificationLogIn(isAuth);
+    
+    if (isAuth) {
+      addAdminBanner();
+      logOut(isAuth);
+      domModificationLogIn(isAuth);
+    }
+
     const works = await fetchData("http://localhost:5678/api/works");
 
     const categorySlug = getCategoryNameFromQueryParam();

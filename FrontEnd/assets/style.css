@@ -280,3 +280,19 @@ footer .link-page {
   margin-top: 1rem;
   text-align: center;
 }
+
+/************* BANNER ***********/
+.admin-banner {
+	background-color: #000000;
+	color: #FFFFFF;
+	padding: 1.2rem 0;
+}
+.admin-banner-content {
+	display: flex;
+	justify-content: center;
+	gap: 21px;
+}
+.admin-banner-content span {
+	font-size: 16px;
+	font-weight: 400;
+}

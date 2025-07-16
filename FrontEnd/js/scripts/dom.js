@@ -178,11 +178,60 @@ export function displayError(message) {
 }
 
 
+/**
+ * Remplace dynamiquement le texte du lien de connexion en "logout"
+ * si l'utilisateur est connecté.
+ *
+ * @param {boolean} isAuth - Indique si l'utilisateur est connecté.
+ */
 function replaceLogInLink(isAuth) {
   if (!isAuth) return; 
-  document.getElementById("link-login").textContent = "logout"
+  document.getElementById("link-login").textContent = "logout";
 }
 
+
+/**
+ * Applique les modifications DOM liées à l’état de connexion.
+ *
+ * @param {boolean} isAuth - Indique si l'utilisateur est connecté.
+ */
 export function domModificationLogIn(isAuth) {
-  replaceLogInLink(isAuth)
+  replaceLogInLink(isAuth);
+}
+
+
+/**
+ * Injecte dynamiquement une bannière d'administration en haut de la page.
+ *
+ * La bannière est uniquement visible pour les utilisateurs connectés (via `isLogIn()`).
+ * Elle contient une icône Font Awesome et un texte "Mode édition",
+ * centrés horizontalement et visuellement séparés du contenu de la page.
+ *
+ * Cette fonction est appelée depuis `main.js` après vérification du token
+ * pour éviter toute trace visible dans le HTML en cas de déconnexion.
+ *
+ * @function addAdminBanner
+ *
+ * @example
+ * if (isLogIn()) {
+ *   addAdminBanner();
+ * }
+ */
+export function addAdminBanner() {
+  const banner = document.createElement("div");
+  banner.classList.add("admin-banner");
+
+  const container = document.createElement("div");
+  container.classList.add("admin-banner-content");
+
+  const icon = document.createElement("i");
+  icon.classList.add("fa-regular", "fa-pen-to-square");
+
+  const text = document.createElement("span");
+  text.textContent = "Mode édition";
+
+  container.append(icon,text);
+  banner.appendChild(container);
+
+  document.body.prepend(banner);
 }

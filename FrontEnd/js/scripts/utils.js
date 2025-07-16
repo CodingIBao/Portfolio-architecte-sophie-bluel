@@ -82,10 +82,31 @@ export function slugify(text) {
 }
 
 
+/**
+ * Vérifie si un utilisateur est connecté en vérifiant la présence d’un token.
+ *
+ * @returns {boolean} `true` si un token est présent et non vide, sinon `false`.
+ *
+ * @example
+ * if (isLogIn()) {
+ *   // Afficher les éléments admin
+ * }
+ */
 export function isLogIn() {
   return !!localStorage.getItem("token");
 }
 
+
+/**
+ * Gère la déconnexion de l'utilisateur.
+ *
+ * Si l'utilisateur est connecté (`isAuth` est `true`), cette fonction
+ * ajoute un écouteur sur le lien "logout" pour :
+ * - Supprimer le token stocké dans le localStorage
+ * - Rediriger vers la page de connexion
+ *
+ * @param {boolean} isAuth - Indique si l'utilisateur est connecté.
+ */
 export function logOut(isAuth) {
   const logOut = document.getElementById("link-login");
   if (!logOut || !isAuth) return;
