@@ -14,7 +14,7 @@
  */
 
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditButton } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 (async function init() {
@@ -23,6 +23,7 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
     
     if (isAuth) {
       addAdminBanner();
+      addEditButton();
       logOut(isAuth);
       domModificationLogIn(isAuth);
     }

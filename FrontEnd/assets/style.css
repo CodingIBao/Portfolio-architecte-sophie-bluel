@@ -146,11 +146,11 @@ nav li {
 }
 #portfolio h2 {
 	text-align: center;
-	margin-bottom: 1em;
 }
 
 /************* FILTERS ***********/
 #filters {
+	margin-top: 1em;
 	display: flex;
 	justify-content: center;
 	gap: 10px;
@@ -281,6 +281,8 @@ footer .link-page {
   text-align: center;
 }
 
+
+/************* ADMIN ***********/
 /************* BANNER ***********/
 .admin-banner {
 	background-color: #000000;
@@ -295,4 +297,19 @@ footer .link-page {
 .admin-banner-content span {
 	font-size: 16px;
 	font-weight: 400;
+}
+
+/************* BUTTON-ADD ***********/
+.portfolio-title-wrapper {
+	display: flex;
+	justify-content: center;
+	gap: 21px;
+}
+.edit-button {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background-color: transparent;
+	border: none;
+	cursor: pointer;
 }

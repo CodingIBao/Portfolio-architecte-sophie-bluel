@@ -235,3 +235,24 @@ export function addAdminBanner() {
 
   document.body.prepend(banner);
 }
+
+export function addEditButton() {
+  const h2 = document.querySelector("#portfolio h2");
+
+  const wrapper = document.createElement("div");
+  wrapper.classList.add("portfolio-title-wrapper");
+
+  const btn = document.createElement("button");
+  btn.classList.add("edit-button");
+
+  const icon = document.createElement("i");
+  icon.classList.add("fa-regular", "fa-pen-to-square");
+
+  const text = document.createElement("span");
+  text.textContent = "Modifier";
+
+  btn.append(icon, text);
+
+  h2.replaceWith(wrapper);
+  wrapper.append(h2, btn);
+}
