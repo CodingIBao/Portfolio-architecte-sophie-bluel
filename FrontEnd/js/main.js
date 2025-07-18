@@ -14,7 +14,7 @@
  */
 
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditButton } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, addModal, displayModal } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 (async function init() {
@@ -23,9 +23,11 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
     
     if (isAuth) {
       addAdminBanner();
-      addEditButton();
+      addEditLink();
       logOut(isAuth);
       domModificationLogIn(isAuth);
+      addModal();
+      displayModal();
     }
 
     const works = await fetchData("http://localhost:5678/api/works");

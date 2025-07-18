@@ -220,39 +220,116 @@ export function domModificationLogIn(isAuth) {
 export function addAdminBanner() {
   const banner = document.createElement("div");
   banner.classList.add("admin-banner");
-
-  const container = document.createElement("div");
-  container.classList.add("admin-banner-content");
-
+  
+  const iconLink = document.createElement("a");
+  iconLink.classList.add("icon-link", "edit-link");
+  iconLink.href = "#";
+  
   const icon = document.createElement("i");
   icon.classList.add("fa-regular", "fa-pen-to-square");
+
+  const textLink = document.createElement("a");
+  textLink.classList.add("text-link", "edit-link");
+  textLink.href = "#";
 
   const text = document.createElement("span");
   text.textContent = "Mode édition";
 
-  container.append(icon,text);
-  banner.appendChild(container);
-
+  iconLink.appendChild(icon);
+  textLink.appendChild(text);
+  banner.append(iconLink,textLink);
+  
   document.body.prepend(banner);
+
+  textLink.addEventListener("mouseenter", ()=> {
+    icon.classList.add("banner-hover-sync");
+    text.classList.add("banner-hover-sync");
+  });
+  textLink.addEventListener("mouseleave", ()=> {
+    icon.classList.remove("banner-hover-sync");
+    text.classList.remove("banner-hover-sync");
+  });
+
+  iconLink.addEventListener("mouseenter", ()=> {
+    text.classList.add("banner-hover-sync");
+    icon.classList.add("banner-hover-sync");
+  });
+  iconLink.addEventListener("mouseleave", ()=> {
+    text.classList.remove("banner-hover-sync");
+    icon.classList.remove("banner-hover-sync");
+  });
 }
 
-export function addEditButton() {
+
+export function addEditLink() {
   const h2 = document.querySelector("#portfolio h2");
 
   const wrapper = document.createElement("div");
   wrapper.classList.add("portfolio-title-wrapper");
 
-  const btn = document.createElement("button");
-  btn.classList.add("edit-button");
+  const linkContainer = document.createElement("div");
+  linkContainer.classList.add("link-container");
+  
+  const iconLink = document.createElement("a");
+  iconLink.classList.add("icon-link", "edit-link");
+  iconLink.href = "#";
 
   const icon = document.createElement("i");
   icon.classList.add("fa-regular", "fa-pen-to-square");
+  
+  const textLink = document.createElement("a");
+  textLink.classList.add("text-link", "edit-link");
+  textLink.href = "#";
 
   const text = document.createElement("span");
   text.textContent = "Modifier";
-
-  btn.append(icon, text);
-
+  
   h2.replaceWith(wrapper);
-  wrapper.append(h2, btn);
+  
+  iconLink.appendChild(icon);
+  textLink.appendChild(text);
+  linkContainer.append(iconLink, textLink);
+  wrapper.append(h2,linkContainer);
+
+  textLink.addEventListener("mouseenter", ()=> {
+    icon.classList.add("portfolio-hover-sync");
+    text.classList.add("portfolio-hover-sync");
+  });
+  textLink.addEventListener("mouseleave", ()=> {
+    icon.classList.remove("portfolio-hover-sync");
+    text.classList.remove("portfolio-hover-sync");
+  });
+
+  iconLink.addEventListener("mouseenter", ()=> {
+    text.classList.add("portfolio-hover-sync");
+    icon.classList.add("portfolio-hover-sync");
+  });
+  iconLink.addEventListener("mouseleave", ()=> {
+    text.classList.remove("portfolio-hover-sync");
+    icon.classList.remove("portfolio-hover-sync");
+  });
+}
+
+
+export function addModal() {
+  const modal = document.createElement("div");
+  modal.classList.add("modal");
+
+  const modalContainer = document.createElement("div");
+  modalContainer.classList.add("modal-container");
+
+  modal.appendChild(modalContainer);
+  document.body.prepend(modal);
+}
+
+
+export function displayModal() {
+  const editLinks = document.querySelectorAll(".edit-link");
+
+  editLinks.forEach(link => {
+    link.addEventListener("click", () => {
+      const modal = document.querySelector(".modal");
+      modal.style.display = "block";
+    });
+  });
 }
