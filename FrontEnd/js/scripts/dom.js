@@ -179,10 +179,11 @@ export function displayError(message) {
 
 
 /**
- * Remplace dynamiquement le texte du lien de connexion en "logout"
+ * Modifie dynamiquement le texte du lien de connexion en "logout"
  * si l'utilisateur est connecté.
  *
  * @param {boolean} isAuth - Indique si l'utilisateur est connecté.
+ * @private
  */
 function replaceLogInLink(isAuth) {
   if (!isAuth) return; 
@@ -261,6 +262,19 @@ export function addAdminBanner() {
 }
 
 
+/**
+ * Ajoute dynamiquement un lien "Modifier" (icône + texte) à côté du titre "Mes Projets".
+ *
+ * Ce lien est uniquement visible pour les utilisateurs connectés.
+ * Il déclenche l'ouverture de la modale au clic et applique un effet visuel synchronisé au survol.
+ *
+ * @function addEditLink
+ *
+ * @example
+ * if (isLogIn()) {
+ *   addEditLink();
+ * }
+ */
 export function addEditLink() {
   const h2 = document.querySelector("#portfolio h2");
 
@@ -311,18 +325,15 @@ export function addEditLink() {
 }
 
 
-export function addModal() {
-  const modal = document.createElement("div");
-  modal.classList.add("modal");
-
-  const modalContainer = document.createElement("div");
-  modalContainer.classList.add("modal-container");
-
-  modal.appendChild(modalContainer);
-  document.body.prepend(modal);
-}
-
-
+/**
+ * Attache un gestionnaire d'événement à tous les éléments ayant la classe `.edit-link`
+ * afin d'afficher la modale lors d'un clic.
+ *
+ * @function displayModal
+ *
+ * @example
+ * displayModal(); // Active l'ouverture de la modale via les liens "Modifier"
+ */
 export function displayModal() {
   const editLinks = document.querySelectorAll(".edit-link");
 
@@ -331,5 +342,39 @@ export function displayModal() {
       const modal = document.querySelector(".modal");
       modal.style.display = "block";
     });
+  });
+}
+
+
+/**
+ * Gère la fermeture de la modale de différentes manières :
+ * - Clic sur l’icône de fermeture
+ * - Clic à l’extérieur du contenu de la modale (fond noir)
+ * - Appui sur la touche Échap
+ *
+ * @function exitModal
+ *
+ * @example
+ * exitModal(); // Active tous les moyens de fermer la modale
+ */
+export function exitModal() {
+  const modalIconClose = document.querySelector(".modal-icon-close");
+  const modalContainer = document.querySelector(".modal-container");
+  const modal = document.querySelector(".modal");
+
+  modalIconClose.addEventListener("click", ()=> {
+    modal.style.display = "none";
+  });
+
+  modalContainer.addEventListener("click", (event)=> {
+    if (event.target === modalContainer) {
+      modal.style.display = "none";
+    }
+  });
+
+  document.addEventListener("keydown", (event)=> {
+    if (event.key === "Escape" && modal.style.display === "block") {
+      modal.style.display = "none";
+    }
   });
 }
