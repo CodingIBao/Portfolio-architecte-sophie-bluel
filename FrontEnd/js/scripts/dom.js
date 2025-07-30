@@ -378,3 +378,88 @@ export function exitModal() {
     }
   });
 }
+
+
+/**
+ * Crée un élément <figure> pour la galerie modale à partir d’un projet.
+ *
+ * @param {Object} work - Projet à afficher dans la modale.
+ * @param {string} work.imageUrl - L’URL de l’image.
+ * @param {number|string} work.id - Identifiant unique du projet.
+ * @returns {HTMLElement} Élément <figure> contenant l’image et le bouton de suppression.
+ */
+function createModalFigure(work) {
+  const figure = document.createElement("figure");
+
+  const img = document.createElement("img");
+  img.src = work.imageUrl;
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.classList.add("delete-btn");
+  deleteBtn.setAttribute("data-id", work.id);
+
+  const trashIcon = document.createElement("i");
+  trashIcon.className = "fa-solid fa-trash-can";
+
+  deleteBtn.appendChild(trashIcon);
+  handleDeleteButton(deleteBtn);
+
+  figure.append(deleteBtn, img);
+  return figure;
+}
+
+
+/**
+ * Affiche dynamiquement les projets dans la galerie de la modale.
+ *
+ * @param {Object[]} works - Liste des projets à afficher.
+ */
+export function displayModalGallery(works) {
+  const modalGalleryContent = document.querySelector(".modal-gallery-content");
+  modalGalleryContent.innerHTML = "";
+  
+  works.forEach(work => {
+    const figure = createModalFigure(work);
+    modalGalleryContent.appendChild(figure);
+  });
+}
+
+
+/**
+ * Attache un écouteur d'événement à un bouton de suppression d'image.
+ *
+ * Lors du clic :
+ * - envoie une requête `DELETE` à l'API avec l'ID du projet
+ * - supprime l’élément du DOM si la suppression est réussie
+ * - affiche une erreur dans la console en cas d’échec
+ *
+ * Cette fonction est à utiliser pour chaque bouton généré dans la modale.
+ *
+ * @function handleDeleteButton
+ * @param {HTMLButtonElement} button - Le bouton associé à un projet (doit contenir l’attribut `data-id`)
+ *
+ * @example
+ * const btn = document.querySelector(".delete-btn");
+ * handleDeleteButton(btn);
+ */
+export function handleDeleteButton(button) {
+  button.addEventListener("click", async (e)=> {
+    const workId = e.currentTarget.dataset.id;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:5678/api/works/${workId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error("Erreur lors de la suppression");
+
+      e.currentTarget.parentElement.remove();
+    } catch (error) {
+      console.error("Suppression échoué : ", error)
+    }
+  });
+}

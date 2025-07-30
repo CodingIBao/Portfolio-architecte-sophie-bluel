@@ -17,12 +17,13 @@
  */
 
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 (async function init() {
   try {
     const isAuth = isLogIn();
+    const works = await fetchData("http://localhost:5678/api/works");
     
     if (isAuth) {
       addAdminBanner();
@@ -31,9 +32,8 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
       domModificationLogIn(isAuth);
       displayModal();
       exitModal();
+      displayModalGallery(works);
     }
-
-    const works = await fetchData("http://localhost:5678/api/works");
 
     const categorySlug = getCategoryNameFromQueryParam();
     const filteredWorks = categorySlug
