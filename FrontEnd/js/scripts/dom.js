@@ -426,17 +426,18 @@ export function displayModalGallery(works) {
 
 
 /**
- * Attache un écouteur d'événement à un bouton de suppression d'image.
+ * Attache un écouteur d'événement à un bouton de suppression de projet.
  *
  * Lors du clic :
- * - envoie une requête `DELETE` à l'API avec l'ID du projet
- * - supprime l’élément du DOM si la suppression est réussie
- * - affiche une erreur dans la console en cas d’échec
+ * - Récupère l’ID du projet via l’attribut `data-id`
+ * - Envoie une requête DELETE à l'API avec le token JWT
+ * - Supprime l’élément <figure> correspondant du DOM si la suppression réussit
+ * - Affiche un message d’erreur dans la console en cas d’échec
  *
- * Cette fonction est à utiliser pour chaque bouton généré dans la modale.
+ * Cette fonction est utilisée pour chaque bouton généré dans la galerie modale.
  *
  * @function handleDeleteButton
- * @param {HTMLButtonElement} button - Le bouton associé à un projet (doit contenir l’attribut `data-id`)
+ * @param {HTMLButtonElement} button - Le bouton de suppression associé à un projet
  *
  * @example
  * const btn = document.querySelector(".delete-btn");
@@ -444,6 +445,7 @@ export function displayModalGallery(works) {
  */
 export function handleDeleteButton(button) {
   button.addEventListener("click", async (e)=> {
+    const figure = e.currentTarget.closest("figure");
     const workId = e.currentTarget.dataset.id;
 
     try {
@@ -457,7 +459,8 @@ export function handleDeleteButton(button) {
 
       if (!response.ok) throw new Error("Erreur lors de la suppression");
 
-      e.currentTarget.parentElement.remove();
+      figure.remove();
+      
     } catch (error) {
       console.error("Suppression échoué : ", error)
     }
