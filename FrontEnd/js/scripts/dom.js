@@ -1,4 +1,5 @@
 import { slugify } from "./utils.js";
+import { fetchData } from "./api.js";
 
 /**
  * Module de manipulation du DOM pour l'affichage des projets.
@@ -128,20 +129,24 @@ export function createElement(tag, attributes = {}, textContent ="") {
 
 
 /**
- * Affiche une liste de projets dans la galerie.
+ * Affiche dynamiquement une liste de projets dans la galerie principale.
  *
- * Chaque projet est affiché sous forme de balise `<figure>` contenant
- * une image et une légende (`<figcaption>`).
+ * Chaque projet est inséré sous forme d’un élément `<figure>` contenant :
+ * - une image du projet (`<img>`)
+ * - une légende (`<figcaption>`)
+ * - un attribut `data-id` correspondant à l’ID du projet, utilisé
+ *   pour synchroniser la galerie avec la modale (suppression dynamique).
  *
  * @function displayWorks
  * @param {Object[]} works - Liste des projets à afficher.
+ * @param {number|string} works[].id - Identifiant du projet.
  * @param {string} works[].imageUrl - URL de l’image du projet.
  * @param {string} works[].title - Titre du projet.
  *
  * @example
  * displayWorks([
- *   { imageUrl: "img/chaise.png", title: "Chaise" },
- *   { imageUrl: "img/table.png", title: "Table" }
+ *   { id: 1, imageUrl: "img/chaise.png", title: "Chaise" },
+ *   { id: 2, imageUrl: "img/table.png", title: "Table" }
  * ]);
  */
 export function displayWorks(works) {
@@ -151,6 +156,7 @@ export function displayWorks(works) {
     const img = createElement("img", { src: work.imageUrl, alt: work.title});
     const caption = createElement("figcaption", {}, work.title);
     const figure = createElement("figure");
+    figure.setAttribute("data-id", work.id);
 
     figure.appendChild(img);
     figure.appendChild(caption);
@@ -340,7 +346,10 @@ export function displayModal() {
   editLinks.forEach(link => {
     link.addEventListener("click", () => {
       const modal = document.querySelector(".modal");
+      const modalContentStepOne = document.getElementById("step-one");
+
       modal.style.display = "block";
+      modalContentStepOne.style.display = "flex";
     });
   });
 }
@@ -361,20 +370,28 @@ export function exitModal() {
   const modalIconClose = document.querySelector(".modal-icon-close");
   const modalContainer = document.querySelector(".modal-container");
   const modal = document.querySelector(".modal");
+  const modalContentStepOne = document.getElementById("step-one");
+  const modalContentStepTwo = document.getElementById("step-two");
 
   modalIconClose.addEventListener("click", ()=> {
     modal.style.display = "none";
+    modalContentStepOne.style.display = "none";
+    modalContentStepTwo.style.display = "none";
   });
 
   modalContainer.addEventListener("click", (event)=> {
     if (event.target === modalContainer) {
       modal.style.display = "none";
+      modalContentStepOne.style.display = "none";
+      modalContentStepTwo.style.display = "none";
     }
   });
 
   document.addEventListener("keydown", (event)=> {
     if (event.key === "Escape" && modal.style.display === "block") {
       modal.style.display = "none";
+      modalContentStepOne.style.display = "none";
+      modalContentStepTwo.style.display = "none";
     }
   });
 }
@@ -412,6 +429,12 @@ function createModalFigure(work) {
 /**
  * Affiche dynamiquement les projets dans la galerie de la modale.
  *
+ * Réinitialise d'abord le contenu existant de `.modal-gallery-content`, puis
+ * crée un élément `<figure>` pour chaque projet contenant :
+ * - l’image du projet
+ * - un bouton de suppression lié via `handleDeleteButton`
+ *
+ * @function displayModalGallery
  * @param {Object[]} works - Liste des projets à afficher.
  */
 export function displayModalGallery(works) {
@@ -429,15 +452,17 @@ export function displayModalGallery(works) {
  * Attache un écouteur d'événement à un bouton de suppression de projet.
  *
  * Lors du clic :
- * - Récupère l’ID du projet via l’attribut `data-id`
- * - Envoie une requête DELETE à l'API avec le token JWT
- * - Supprime l’élément <figure> correspondant du DOM si la suppression réussit
- * - Affiche un message d’erreur dans la console en cas d’échec
+ * - Récupère l’ID du projet depuis l’attribut `data-id`
+ * - Envoie une requête DELETE à l’API avec le token JWT
+ * - Supprime l’élément <figure> dans la modale (si trouvé)
+ * - Supprime l’élément <figure> dans la galerie principale (si trouvé)
+ * - Gère les erreurs via un bloc try/catch
  *
- * Cette fonction est utilisée pour chaque bouton généré dans la galerie modale.
+ * Cette fonction permet une mise à jour immédiate du DOM sans rechargement,
+ * tout en évitant les erreurs si les éléments DOM sont manquants.
  *
  * @function handleDeleteButton
- * @param {HTMLButtonElement} button - Le bouton de suppression associé à un projet
+ * @param {HTMLButtonElement} button - Le bouton associé à un projet (doit contenir un attribut `data-id`)
  *
  * @example
  * const btn = document.querySelector(".delete-btn");
@@ -447,22 +472,43 @@ export function handleDeleteButton(button) {
   button.addEventListener("click", async (e)=> {
     const figure = e.currentTarget.closest("figure");
     const workId = e.currentTarget.dataset.id;
+    const token = localStorage.getItem("token");
+    const galleryFigure = document.querySelector(`.gallery figure[data-id="${workId}"]`);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5678/api/works/${workId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+      await fetchData(`http://localhost:5678/api/works/${workId}`, "DELETE", {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
       });
 
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
+      if (figure) figure.remove();
+      if (galleryFigure) galleryFigure.remove();
 
-      figure.remove();
-      
-    } catch (error) {
-      console.error("Suppression échoué : ", error)
+    } catch (error){
+      console.error("suppression échoué : ", error);
     }
+  });
+}
+
+
+/**
+ * Affiche l'étape 2 de la modale "Ajout de photo" et masque la galerie (étape 1).
+ *
+ * Cette fonction est déclenchée lorsqu'on clique sur le bouton "Ajouter une photo"
+ * dans la modale d’administration.
+ *
+ * @function displayModalAddPhoto
+ *
+ * @example
+ * displayModalAddPhoto(); // Active le formulaire de téléchargement
+ */
+export function displayModalAddPhoto() {
+  const modalContentStepOne = document.getElementById("step-one");
+  const modalContentStepTwo = document.getElementById("step-two");
+  const buttonAddGallery = document.querySelector(".btn-add-gallery");
+  
+  buttonAddGallery.addEventListener("click", ()=> {
+    modalContentStepOne.style.display = "none";
+    modalContentStepTwo.style.display = "flex";
   });
 }

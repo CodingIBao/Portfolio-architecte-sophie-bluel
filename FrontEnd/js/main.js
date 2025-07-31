@@ -6,18 +6,19 @@
  * - Affichage conditionnel de la bannière admin et du lien "Modifier"
  * - Activation de la logique de déconnexion (logout)
  * - Mise en place de l’ouverture et de la fermeture de la modale
+ * - Affichage de la galerie modale avec possibilité de suppression
+ * - Activation du passage à l’étape d’ajout de projet dans la modale
  * - Récupération des projets depuis l'API
  * - Extraction des catégories uniques
- * - Affichage des filtres et de la galerie (avec possibilité de filtrage)
+ * - Affichage des filtres et de la galerie principale (avec possibilité de filtrage)
  *
  * Ce module exécute une IIFE asynchrone (fonction immédiatement invoquée)
  * pour lancer automatiquement l'application dès le chargement du script.
  *
  * @module main
  */
-
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 (async function init() {
@@ -33,6 +34,7 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
       displayModal();
       exitModal();
       displayModalGallery(works);
+      displayModalAddPhoto()
     }
 
     const categorySlug = getCategoryNameFromQueryParam();

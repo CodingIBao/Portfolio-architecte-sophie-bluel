@@ -31,7 +31,8 @@ export async function fetchData(url, method = "GET", headers = {}, body = null) 
 
       throw new Error(`ERREUR ${errorCode} - ${message}`);
     }
-
+    
+    if (response.status === 204) return;
     return await response.json();
 
   } catch (error) {
