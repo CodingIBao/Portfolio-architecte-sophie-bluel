@@ -40,32 +40,36 @@
           </button>
           <h2 class="modal-title">Ajout photo</h2>
           <form id="upload-form" enctype="multipart/form-data">
-            <div class="form-group">
-              <label for="image">Image</label>
-              <input
-                type="file"
-                id="image"
-                name="image"
-                accept="image/*"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="title">Titre</label>
-              <input type="text" id="title" name="title" required />
-            </div>
-            <div class="form-group">
-              <label for="category">Catégorie</label>
-              <select id="category" name="category" required>
-                <option value="" disabled selected hidden>
-                  Choisir une catégorie
-                </option>
-              </select>
-            </div>
+            <ul class="form-group">
+              <li class="form-group-header">
+                <i class="fa-regular fa-image icon-placeholder"></i>
+                <label for="image" class="upload-label">
+                  <span class="upload-text">+ ajouter photo</span>
+                </label>
+                <span class="upload-info">jpg, png 4mo max</span>
+                <input
+                  type="file"
+                  id="image"
+                  name="image"
+                  accept="image/*"
+                  required
+                />
+              </li>
+              <li class="form-group-main">
+                <label for="title">Titre</label>
+                <input type="text" id="title" name="title" required />
+              </li>
+              <li class="form-group-footer">
+                <label for="category">Catégorie</label>
+                <select id="category" name="category" required>
+                  <option value="" disabled selected hidden>
+                    Choisir une catégorie
+                  </option>
+                </select>
+              </li>
+            </ul>
             <hr class="dividing-line" />
-            <div class="modal-buttons">
-              <button type="submit" class="btn-add-gallery">Valider</button>
-            </div>
+            <button type="submit" class="btn-form-validate">Valider</button>
           </form>
         </div>
       </div>

@@ -5,24 +5,28 @@
  * les doublons en se basant sur l’identifiant (`category.id`).
  *
  * Bien que l’identifiant soit utilisé pour détecter l’unicité,
- * c’est désormais le nom (`category.name`) qui sert pour le filtrage côté interface.
+ * c’est le nom (`category.name`) qui est utilisé dans l’interface utilisateur pour le filtrage.
  *
+ * @function getUniqueCategories
  * @param {Object[]} works - Tableau d’objets projet, chacun contenant une propriété `category`.
- * @returns {Object[]} - Tableau des catégories uniques (par exemple : { id, name }).
+ * @param {Object} works[].category - Catégorie associée à un projet.
+ * @param {number} works[].category.id - Identifiant unique de la catégorie.
+ * @param {string} works[].category.name - Nom lisible de la catégorie.
+ * @returns {Object[]} - Tableau des catégories uniques (exemple : { id, name }).
  *
  * @example
  * const works = [
  *   { id: 1, title: "Abajour Tahina", category: { id: 1, name: "Objets" } },
  *   { id: 2, title: "Appartement Paris V", category: { id: 2, name: "Appartements" } },
- *   { id: 3, title: "Restaurant Sushisen - Londres", category: { id: 3, name: "Hotels & restaurants" } },
- *   { id: 4, title: "Villa “La Balisiere” - Port Louis", category: { id: 2, name: "Appartements" } }
+ *   { id: 3, title: "Restaurant Sushisen", category: { id: 3, name: "Hotels & restaurants" } },
+ *   { id: 4, title: "Villa Balisière", category: { id: 2, name: "Appartements" } }
  * ];
  *
  * const uniqueCategories = getUniqueCategories(works);
  * // Résultat :
  * // [
  * //   { id: 1, name: "Objets" },
- * //   { id: 2, name: "Appartements" }
+ * //   { id: 2, name: "Appartements" },
  * //   { id: 3, name: "Hotels & restaurants" }
  * // ]
  */

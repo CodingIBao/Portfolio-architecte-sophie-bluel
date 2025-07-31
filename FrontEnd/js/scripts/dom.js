@@ -357,9 +357,12 @@ export function displayModal() {
 
 /**
  * Gère la fermeture de la modale de différentes manières :
- * - Clic sur l’icône de fermeture
+ * - Clic sur l’une des icônes de fermeture (toutes les occurrences de `.modal-icon-close`)
  * - Clic à l’extérieur du contenu de la modale (fond noir)
  * - Appui sur la touche Échap
+ *
+ * Cette fonction attache les écouteurs nécessaires à tous les boutons de fermeture
+ * et garantit la fermeture correcte de toutes les étapes de la modale.
  *
  * @function exitModal
  *
@@ -367,16 +370,18 @@ export function displayModal() {
  * exitModal(); // Active tous les moyens de fermer la modale
  */
 export function exitModal() {
-  const modalIconClose = document.querySelector(".modal-icon-close");
+  const closeIcons = document.querySelectorAll(".modal-icon-close");
   const modalContainer = document.querySelector(".modal-container");
   const modal = document.querySelector(".modal");
   const modalContentStepOne = document.getElementById("step-one");
   const modalContentStepTwo = document.getElementById("step-two");
 
-  modalIconClose.addEventListener("click", ()=> {
-    modal.style.display = "none";
-    modalContentStepOne.style.display = "none";
-    modalContentStepTwo.style.display = "none";
+  closeIcons.forEach(icon => {
+    icon.addEventListener("click", () => {
+      modal.style.display = "none";
+      modalContentStepOne.style.display = "none";
+      modalContentStepTwo.style.display = "none";
+    });
   });
 
   modalContainer.addEventListener("click", (event)=> {
