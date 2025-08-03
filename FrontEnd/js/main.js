@@ -19,7 +19,7 @@
  * @module main
  */
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack, enableUploadLabelTrigger } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 (async function init() {
@@ -37,6 +37,7 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
       displayModalGallery(works);
       displayModalAddPhoto();
       handleModalBack();
+      enableUploadLabelTrigger();
     }
 
     const categorySlug = getCategoryNameFromQueryParam();

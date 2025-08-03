@@ -483,16 +483,18 @@ footer .link-page {
 	font-size: 68px;
 	color: #B9C5CC;
 }
-.upload-text {
-	cursor: pointer;
+.upload-label {
 	background-color: #CBD6DC;
 	color: #306685;
 	border-radius: 50px;
 	padding: 10px 30px;
+	cursor: pointer;
+}
+.upload-text {
 	border: none;
 }
 input[type="file"] {
-	display: none;
+display: none;
 }
 .upload-info {
 	font-size: 10px;

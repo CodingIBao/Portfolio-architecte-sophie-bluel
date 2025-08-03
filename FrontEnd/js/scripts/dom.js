@@ -544,3 +544,27 @@ export function handleModalBack() {
     modalContentStepOne.style.display = "flex";
   });
 }
+
+
+/**
+ * Permet à l'utilisateur d'ouvrir la boîte de dialogue de sélection de fichier
+ * en appuyant sur "Entrée" lorsqu'il est focus sur le label "+ ajouter photo".
+ *
+ * Utile pour améliorer l’accessibilité clavier de l’upload de fichier,
+ * tout en maintenant l’input de type file masqué.
+ *
+ * @function enableUploadLabelTrigger
+ *
+ * @example
+ * enableUploadLabelTrigger(); // rend le label clavier-accessible
+ */
+export function enableUploadLabelTrigger() {
+  const uploadLabel = document.querySelector(".upload-label");
+  const uploadInput = document.getElementById("image");
+
+  uploadLabel.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      uploadInput.click();
+    }
+ });
+}

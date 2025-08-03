@@ -50,22 +50,17 @@
             <ul class="form-group">
               <li class="form-group-header">
                 <i class="fa-regular fa-image icon-placeholder"></i>
-                <label
-                  for="image"
-                  class="upload-label"
-                  tabindex="0"
-                  role="button"
-                >
+                <label for="image" class="upload-label" tabindex="0">
                   <span class="upload-text">+ ajouter photo</span>
+                  <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept="image/*"
+                    required
+                  />
                 </label>
                 <span class="upload-info">jpg, png 4mo max</span>
-                <input
-                  type="file"
-                  id="image"
-                  name="image"
-                  accept="image/*"
-                  required
-                />
               </li>
               <li class="form-group-main">
                 <label for="title">Titre</label>
