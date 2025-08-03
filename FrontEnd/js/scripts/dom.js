@@ -517,3 +517,30 @@ export function displayModalAddPhoto() {
     modalContentStepTwo.style.display = "flex";
   });
 }
+
+
+/**
+ * Gère le retour de la modale depuis l'étape 2 (ajout photo) vers l'étape 1 (galerie).
+ *
+ * Cette fonction :
+ * - Cible l’icône de retour (flèche gauche)
+ * - Cache le contenu de l’étape 2
+ * - Réaffiche le contenu de l’étape 1 (galerie de projets)
+ *
+ * Elle est appelée uniquement si l'utilisateur est connecté et que la modale est active.
+ *
+ * @function handleModalBack
+ *
+ * @example
+ * handleModalBack(); // Permet de revenir à la galerie modale
+ */
+export function handleModalBack() {
+  const modalIconBack = document.querySelector(".modal-icon-back");
+  const modalContentStepOne = document.getElementById("step-one");
+  const modalContentStepTwo = document.getElementById("step-two");
+
+  modalIconBack.addEventListener("click",() => {
+    modalContentStepTwo.style.display = "none";
+    modalContentStepOne.style.display = "flex";
+  });
+}

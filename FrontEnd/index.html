@@ -23,9 +23,11 @@
     <div class="modal">
       <div class="modal-container">
         <div class="modal-content" id="step-one">
-          <button class="modal-icon-close">
-            <i class="fa-solid fa-x"></i>
-          </button>
+          <div class="modal-header">
+            <button class="modal-icon-close">
+              <i class="fa-solid fa-x"></i>
+            </button>
+          </div>
           <h2 class="modal-title">Galerie photo</h2>
           <div class="modal-gallery-container">
             <div class="modal-gallery-content"></div>
@@ -35,15 +37,25 @@
         </div>
 
         <div class="modal-content" id="step-two">
-          <button class="modal-icon-close">
-            <i class="fa-solid fa-x"></i>
-          </button>
+          <div class="modal-header">
+            <button class="modal-icon-back">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <button class="modal-icon-close">
+              <i class="fa-solid fa-x"></i>
+            </button>
+          </div>
           <h2 class="modal-title">Ajout photo</h2>
           <form id="upload-form" enctype="multipart/form-data">
             <ul class="form-group">
               <li class="form-group-header">
                 <i class="fa-regular fa-image icon-placeholder"></i>
-                <label for="image" class="upload-label">
+                <label
+                  for="image"
+                  class="upload-label"
+                  tabindex="0"
+                  role="button"
+                >
                   <span class="upload-text">+ ajouter photo</span>
                 </label>
                 <span class="upload-info">jpg, png 4mo max</span>
@@ -61,11 +73,19 @@
               </li>
               <li class="form-group-footer">
                 <label for="category">Catégorie</label>
-                <select id="category" name="category" required>
-                  <option value="" disabled selected hidden>
-                    Choisir une catégorie
-                  </option>
-                </select>
+                <div class="select-wrapper">
+                  <select id="category" name="category" required>
+                    <option value="" disabled selected hidden>
+                      Choisir une catégorie
+                    </option>
+                    <option value="1">Photographie</option>
+                    <option value="2">Architecture</option>
+                    <option value="3">Design</option>
+                  </select>
+                  <span class="chevron">
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </span>
+                </div>
               </li>
             </ul>
             <hr class="dividing-line" />

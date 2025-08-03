@@ -8,6 +8,7 @@
  * - Mise en place de l’ouverture et de la fermeture de la modale
  * - Affichage de la galerie modale avec possibilité de suppression
  * - Activation du passage à l’étape d’ajout de projet dans la modale
+ * - Activation du bouton retour pour revenir à la galerie depuis le formulaire d’ajout
  * - Récupération des projets depuis l'API
  * - Extraction des catégories uniques
  * - Affichage des filtres et de la galerie principale (avec possibilité de filtrage)
@@ -18,7 +19,7 @@
  * @module main
  */
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 (async function init() {
@@ -34,7 +35,8 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
       displayModal();
       exitModal();
       displayModalGallery(works);
-      displayModalAddPhoto()
+      displayModalAddPhoto();
+      handleModalBack();
     }
 
     const categorySlug = getCategoryNameFromQueryParam();
