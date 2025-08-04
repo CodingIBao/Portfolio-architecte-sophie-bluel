@@ -520,7 +520,8 @@ display: none;
 .select-wrapper {
 	position: relative;
 }
-.form-group-footer select {
+.form-group-footer #category {
+	border: none;
 	cursor: pointer;
 	appearance: none;
 	width: 100%;

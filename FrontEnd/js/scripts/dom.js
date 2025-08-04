@@ -332,13 +332,18 @@ export function addEditLink() {
 
 
 /**
- * Attache un gestionnaire d'événement à tous les éléments ayant la classe `.edit-link`
- * afin d'afficher la modale lors d'un clic.
+ * Affiche la modale en mode galerie (étape 1) lors du clic sur un lien "Modifier".
+ *
+ * Cette fonction :
+ * - Attache un écouteur à chaque lien ayant la classe `.edit-link`
+ * - Affiche la modale et son contenu `#step-one`
+ * - Place automatiquement le focus clavier sur le premier élément interactif de la modale
+ * - Active le piégeage du focus (`trapFocusInModal`) pour garantir une navigation clavier accessible
  *
  * @function displayModal
  *
  * @example
- * displayModal(); // Active l'ouverture de la modale via les liens "Modifier"
+ * displayModal(); // Prépare l'ouverture accessible de la modale via les liens "Modifier"
  */
 export function displayModal() {
   const editLinks = document.querySelectorAll(".edit-link");
@@ -350,6 +355,19 @@ export function displayModal() {
 
       modal.style.display = "block";
       modalContentStepOne.style.display = "flex";
+
+      const focusableSelectors = `
+        a[href], button:not([disabled]), textarea, input[type="text"],
+        input[type="email"], input[type="file"], select,
+        [tabindex]:not([tabindex="-1"])
+      `;
+      const focusableElements = modalContentStepOne.querySelectorAll(focusableSelectors);
+
+      if (focusableElements.length) {
+        focusableElements[0].focus();
+      }
+
+      trapFocusInModal();
     });
   });
 }
@@ -497,24 +515,40 @@ export function handleDeleteButton(button) {
 
 
 /**
- * Affiche l'étape 2 de la modale "Ajout de photo" et masque la galerie (étape 1).
+ * Affiche l’étape 2 de la modale ("Ajout photo") et masque l’étape 1 ("Galerie").
  *
- * Cette fonction est déclenchée lorsqu'on clique sur le bouton "Ajouter une photo"
- * dans la modale d’administration.
+ * Lors du clic sur le bouton "Ajouter une photo", cette fonction :
+ * - Masque la section `#step-one`
+ * - Affiche la section `#step-two` en `display: flex`
+ * - Place le focus clavier sur le premier élément interactif de l’étape 2
+ * - Active le piégeage du focus pour limiter la navigation au sein de la modale
  *
  * @function displayModalAddPhoto
  *
  * @example
- * displayModalAddPhoto(); // Active le formulaire de téléchargement
+ * displayModalAddPhoto(); // Passe à l'étape 2 de la modale et piège le focus
  */
 export function displayModalAddPhoto() {
   const modalContentStepOne = document.getElementById("step-one");
   const modalContentStepTwo = document.getElementById("step-two");
   const buttonAddGallery = document.querySelector(".btn-add-gallery");
-  
-  buttonAddGallery.addEventListener("click", ()=> {
+
+  buttonAddGallery.addEventListener("click", () => {
     modalContentStepOne.style.display = "none";
     modalContentStepTwo.style.display = "flex";
+
+    const focusableSelectors = `
+      a[href], button:not([disabled]), textarea, input[type="text"],
+      input[type="email"], input[type="file"], select,
+      [tabindex]:not([tabindex="-1"])
+    `;
+    const focusableElements = modalContentStepTwo.querySelectorAll(focusableSelectors);
+
+    if (focusableElements.length) {
+      focusableElements[0].focus();
+    }
+
+    trapFocusInModal();
   });
 }
 
@@ -539,9 +573,22 @@ export function handleModalBack() {
   const modalContentStepOne = document.getElementById("step-one");
   const modalContentStepTwo = document.getElementById("step-two");
 
-  modalIconBack.addEventListener("click",() => {
+  modalIconBack.addEventListener("click", () => {
     modalContentStepTwo.style.display = "none";
     modalContentStepOne.style.display = "flex";
+
+    const focusableSelectors = `
+      a[href], button:not([disabled]), textarea, input[type="text"],
+      input[type="email"], input[type="file"], select,
+      [tabindex]:not([tabindex="-1"])
+    `;
+    const focusableElements = modalContentStepOne.querySelectorAll(focusableSelectors);
+    
+    if (focusableElements.length) {
+      focusableElements[0].focus();
+    }
+
+    trapFocusInModal();
   });
 }
 
@@ -567,4 +614,62 @@ export function enableUploadLabelTrigger() {
       uploadInput.click();
     }
  });
+}
+
+
+/**
+ * Piège le focus clavier à l'intérieur de la modale active (step-one ou step-two).
+ *
+ * Lorsqu'on utilise la touche Tab, empêche que le focus sorte de la modale
+ * en le redirigeant vers le premier ou dernier élément focusable selon la direction.
+ *
+ * @function trapFocusInModal
+ *
+ * @example
+ * trapFocusInModal(); // Active le piégeage du focus clavier dans la modale affichée
+ */
+export function trapFocusInModal() {
+  const modal = document.querySelector(".modal");
+
+  currentTrapTarget = [...modal.querySelectorAll(".modal-content")]
+    .find(step => getComputedStyle(step).display !== "none");
+
+  if (!currentTrapTarget) return;
+
+  modal.removeEventListener("keydown", handleTrap);
+
+  modal.addEventListener("keydown", handleTrap);
+}
+
+
+/**
+ * Élément DOM représentant la section active de la modale sur laquelle appliquer le piège clavier.
+ * @type {HTMLElement|null}
+ */
+let currentTrapTarget = null;
+
+/**
+ * Gère la navigation clavier (Tab / Shift+Tab) à l'intérieur d'un conteneur focusable.
+ * @param {KeyboardEvent} e - L'événement clavier
+ */
+function handleTrap(e) {
+  if (!currentTrapTarget || e.key !== "Tab") return;
+
+  const focusableSelectors = `
+    a[href], button:not([disabled]), textarea, input[type="text"],
+    input[type="email"], input[type="file"], select,
+    [tabindex]:not([tabindex="-1"])
+  `;
+  const focusableElements = currentTrapTarget.querySelectorAll(focusableSelectors);
+
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  if (e.shiftKey && document.activeElement === firstElement) {
+    e.preventDefault();
+    lastElement.focus();
+  } else if (!e.shiftKey && document.activeElement === lastElement) {
+    e.preventDefault();
+    firstElement.focus();
+  }
 }
