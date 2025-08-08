@@ -14,6 +14,31 @@ import { fetchData } from "./api.js";
 const gallery = document.querySelector(".gallery");
 
 /**
+ * Sélecteurs CSS des éléments interactifs pouvant recevoir le focus via la touche "Tab" dans la modale.
+ *
+ * Cette constante est utilisée pour :
+ * - Identifier tous les éléments focusables au sein de la modale active (étape 1 ou 2)
+ * - Mettre en place le piégeage du focus clavier (`trapFocusInModal`) afin d'éviter
+ *   que la navigation par Tab ne sorte de la modale
+ *
+ * **Important :**
+ * Lors de l'ajout d'un nouvel élément interactif dans la modale (ex. bouton, champ de formulaire),
+ * il faut l'ajouter ici pour qu'il soit inclus dans la navigation clavier.
+ *
+ * @constant
+ * @type {string}
+ *
+ * @example
+ * const focusableElements = modal.querySelectorAll(focusableSelectors);
+ * focusableElements[0].focus();
+ */
+const focusableSelectors = `
+  a[href], button:not([disabled]), textarea, input[type="text"],
+  input[type="email"], input[type="file"], select,
+  [tabindex]:not([tabindex="-1"])
+`;
+
+/**
  * Définit le bouton de filtre actif en mettant à jour la classe CSS "active".
  *
  * Supprime la classe "active" et l’attribut `aria-pressed="true"` de tous les boutons,
@@ -179,8 +204,13 @@ export function displayWorks(works) {
  */
 export function displayError(message) {
   gallery.innerHTML = "";
-  const errorElement = createElement("p", {class: "error-message"}, message);
-  gallery.appendChild(errorElement);
+
+  const errorElement = document.createElement("p");
+  errorElement.id = "error-display-gallery";
+  errorElement.classList.add("error-message");
+  errorElement.textContent = message;
+
+  portfolio.appendChild(errorElement);
 }
 
 
@@ -356,11 +386,6 @@ export function displayModal() {
       modal.style.display = "block";
       modalContentStepOne.style.display = "flex";
 
-      const focusableSelectors = `
-        a[href], button:not([disabled]), textarea, input[type="text"],
-        input[type="email"], input[type="file"], select,
-        [tabindex]:not([tabindex="-1"])
-      `;
       const focusableElements = modalContentStepOne.querySelectorAll(focusableSelectors);
 
       if (focusableElements.length) {
@@ -507,8 +532,9 @@ export function handleDeleteButton(button) {
       if (figure) figure.remove();
       if (galleryFigure) galleryFigure.remove();
 
-    } catch (error){
-      console.error("suppression échoué : ", error);
+    } catch (error) {
+      const errorMessage = document.getElementById("error-delete-project");
+      errorMessage.innerHTML = error
     }
   });
 }
@@ -533,15 +559,12 @@ export function displayModalAddPhoto() {
   const modalContentStepTwo = document.getElementById("step-two");
   const buttonAddGallery = document.querySelector(".btn-add-gallery");
 
-  buttonAddGallery.addEventListener("click", () => {
+  buttonAddGallery.addEventListener("click", async () => {
     modalContentStepOne.style.display = "none";
     modalContentStepTwo.style.display = "flex";
 
-    const focusableSelectors = `
-      a[href], button:not([disabled]), textarea, input[type="text"],
-      input[type="email"], input[type="file"], select,
-      [tabindex]:not([tabindex="-1"])
-    `;
+    await populateCategorySelect();
+
     const focusableElements = modalContentStepTwo.querySelectorAll(focusableSelectors);
 
     if (focusableElements.length) {
@@ -577,11 +600,6 @@ export function handleModalBack() {
     modalContentStepTwo.style.display = "none";
     modalContentStepOne.style.display = "flex";
 
-    const focusableSelectors = `
-      a[href], button:not([disabled]), textarea, input[type="text"],
-      input[type="email"], input[type="file"], select,
-      [tabindex]:not([tabindex="-1"])
-    `;
     const focusableElements = modalContentStepOne.querySelectorAll(focusableSelectors);
     
     if (focusableElements.length) {
@@ -655,11 +673,6 @@ let currentTrapTarget = null;
 function handleTrap(e) {
   if (!currentTrapTarget || e.key !== "Tab") return;
 
-  const focusableSelectors = `
-    a[href], button:not([disabled]), textarea, input[type="text"],
-    input[type="email"], input[type="file"], select,
-    [tabindex]:not([tabindex="-1"])
-  `;
   const focusableElements = currentTrapTarget.querySelectorAll(focusableSelectors);
 
   const firstElement = focusableElements[0];
@@ -671,5 +684,40 @@ function handleTrap(e) {
   } else if (!e.shiftKey && document.activeElement === lastElement) {
     e.preventDefault();
     firstElement.focus();
+  }
+}
+
+
+export async function populateCategorySelect() {
+  const errorContainer = document.getElementById("error-message-category");
+  const categorySelect = document.getElementById("category");
+  
+  try {
+    const categories = await fetchData("http://localhost:5678/api/categories");
+    
+    categorySelect.innerHTML = "";
+    if (errorContainer) {
+      errorContainer.textContent = "";
+      errorContainer.removeAttribute("role");
+      errorContainer.removeAttribute("aria-live");
+    }
+
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.disabled = true;
+    emptyOption.selected = true;
+    emptyOption.hidden = true;
+    categorySelect.appendChild(emptyOption);
+
+    categories.forEach(category => {
+      const option = document.createElement("option");
+      option.value = category.id;
+      option.textContent = category.name;
+      categorySelect.appendChild(option);
+    });
+  } catch (error) {
+    if (errorContainer) {
+      errorContainer.textContent = "Erreur lors du chargement des catégories : ";
+    }
   }
 }

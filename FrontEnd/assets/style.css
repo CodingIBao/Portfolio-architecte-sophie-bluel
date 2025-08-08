@@ -4,7 +4,23 @@
 */
 
 :root {
-	--color-primary: #FFFFFF;
+	--color-white: white;
+	--color-black: black;
+	--color-error-message: red;
+	--color-title: #1D6154;
+	--color-h1-and-hover: #B1663C;
+	--color-body-and-filters: #FFFEF8;
+	--color-figure-and-contact: #3D3D3D;
+	--color-input-hover: #0E2F28;
+
+	--color-modal-icon: #B9C5CC;
+	--color-modal-group-header: #E8F1F6;
+	--color-modal-label-background: #CBD6DC;
+	--color-modal-label-text: #306685;
+	--color-modal-info: #444444;
+	--color-modal-chevron: #6C6C6C;
+	--color-modal-line: #B3B3B3;
+	--color-modal-button-form-validate: #A7A7A7;
 }
 
 
@@ -35,7 +51,7 @@ footer, header, hgroup, menu, nav, section {
 }
 body {
 	line-height: 1;
-	background-color: #FFFEF8;
+	background-color: var(--color-body-and-filters);
 }
 ol, ul {
 	list-style: none;
@@ -64,13 +80,20 @@ section {
 /************* LINK ***********/
 .link-page {
 	text-decoration: none;
-	color: black;
+	color: var(--color-black);
 }
 .link-page:visited {
-	color: black;
+	color: var(--color-black);
 }
 .link-page:hover {
-	color: #B1663C;
+	color: var(--color-h1-and-hover);
+}
+
+/************* ERROR MESSAGE ***********/
+.error-message {
+  color: var(--color-error-message);
+  font-size: 14px;
+	text-align: center;
 }
 
 /************* HEADER ***********/
@@ -87,7 +110,7 @@ h1{
 	font-family: 'Syne';
 	font-size: 22px;
 	font-weight: 800;
-	color: #B1663C;
+	color: var(--color-h1-and-hover);
 }
 
 h1 > span {
@@ -100,7 +123,7 @@ h2{
 	font-family: 'Syne';
 	font-weight: 700;
 	font-size: 30px;
-	color: #1D6154;
+	color: var(--color-title);
 }
 
 /************* NAV ***********/
@@ -143,12 +166,20 @@ nav li {
 
 #introduction p {
 	margin: 0 auto 0.9em auto;
-	color: #3D3D3D;
+	color: var(--color-figure-and-contact);
 }
 #portfolio {
 	max-width: 952px;
 	margin: auto;
+	position: relative;
 }
+#error-display-gallery {
+	position: absolute;
+	top: 76%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 #portfolio h2 {
 	text-align: center;
 }
@@ -163,10 +194,10 @@ nav li {
 }
 
 #filters button {
-	background-color: #FFFEF8;
-	border: 1px solid #1D6154;
+	background-color: var(--color-body-and-filters);
+	border: 1px solid var(--color-title);
 	border-radius: 60px;
-	color: #1D6154;
+	color: var(--color-title);
 	font-family: 'Syne';
 	font-size: 16px;
 	font-weight: 700;
@@ -174,14 +205,14 @@ nav li {
 }
 
 #filters button:hover {
-	background-color: #1D6154;
-	color: #FFFEF8;
+	background-color: var(--color-title);
+	color: var(--color-body-and-filters);
 	cursor: pointer;
 }
 
 #filters button.active {
-	background-color: #1D6154;
-	color: #FFFEF8;
+	background-color: var(--color-title);
+	color: var(--color-body-and-filters);
 }
 
 /************* GALLERY ***********/
@@ -196,7 +227,7 @@ nav li {
 	width: 100%;
 }
 .gallery figure figcaption {
-	color: #3D3D3D;
+	color: var(--color-figure-and-contact);
 }
 
 /************* CONTACT ***********/
@@ -207,12 +238,12 @@ nav li {
 }
 #contact > * {
 	text-align: center;
-	color: #3D3D3D;
+	color: var(--color-figure-and-contact);
 
 }
 #contact h2{
 	margin-bottom: 20px;
-	color: #1D6154;
+	color: var(--color-title);
 }
 #contact form {
 	margin: 0 auto;
@@ -231,7 +262,7 @@ nav li {
 }
 #contact label {
 	margin: 2em 0 1em 0;
-	color: #3D3D3D;
+	color: var(--color-figure-and-contact);
 }
 #contact textarea {
 	border: none;
@@ -244,8 +275,8 @@ nav li {
 input[type="submit"] {
 	font-family: 'Syne';
 	font-weight: 700;
-	color: white;
-	background-color: #1D6154;
+	color: var(--color-white);
+	background-color: var(--color-title);
 	margin : 2em auto ;
 	width: 180px;
 	text-align: center;
@@ -256,12 +287,12 @@ input[type="submit"] {
 }
 input[type="submit"]:hover {
 	transition: background-color 0.3s ease;
-	background-color: #0E2F28;
+	background-color: var(--color-input-hover);
 }
 
 /************* FOOTER ***********/
 footer {
-	background-color: white;
+	background-color: var(--color-white);
 }
 footer nav {
 	max-width: 1260px;
@@ -278,27 +309,18 @@ footer .link-page {
 }
 
 
-/************* ERROR MESSAGE ***********/
-.error-message {
-  color: red;
-  font-size: 14px;
-  margin-top: 1rem;
-  text-align: center;
-}
-
-
 /************* ADMIN ***********/
 /************* BANNER ***********/
 .admin-banner {
 	display: flex;
 	justify-content: center;
 	gap: 20px;
-	background-color: #000000;
+	background-color: var(--color-black);
 	padding: 1.2rem 0;
 	text-align: center;
 }
 .admin-banner a {
-	color: #FFFFFF;
+	color: var(--color-white);
 	text-decoration: none;
 }
 .banner-hover-sync {
@@ -311,7 +333,7 @@ footer .link-page {
 }
 .portfolio-title-wrapper a {
 	text-decoration: none;
-	color: #000000;
+	color: var(--color-black);
 }
 .link-container {
 	position: absolute;
@@ -323,7 +345,7 @@ footer .link-page {
 	gap: 8px;
 }
 .portfolio-hover-sync {
-	color: #B1663C;
+	color: var(--color-h1-and-hover);
 }
 
 /************* MODAL ***********/
@@ -349,7 +371,7 @@ footer .link-page {
 }
 .modal-content {
 	flex-direction: column;
-	background-color: #FFFFFF;
+	background-color: var(--color-white);
 	width: 90%;
 	height: 90%;
 	max-width: 630px;
@@ -371,7 +393,7 @@ footer .link-page {
 .modal-title {
 	margin-bottom: 51px;
 	text-align: center;
-	color: #000000;
+	color: var(--color-black);
 	font-family: 'Work Sans';
 	font-style: normal;
 	font-weight: 400;
@@ -384,7 +406,16 @@ footer .link-page {
 	align-items: center;
 	justify-content: space-between;
 	height: 100%;
+	position: relative;
 }
+#error-delete-project {
+	position: absolute;
+	top: 83%;
+  left: 50%;
+  transform: translateX(-50%);
+	text-align: center;
+}
+
 .modal-gallery-content {
 	display: grid;
 	justify-content: center;
@@ -406,8 +437,8 @@ footer .link-page {
 	position: absolute;
 	top: 6px;
 	right: 6px;
-	background-color: #000000;
-	color: white;
+	background-color: var(--color-black);
+	color: var(--color-white);
 	border: none;
 	border-radius: 2px;
 	font-size: 11px;
@@ -419,7 +450,7 @@ footer .link-page {
 	height: 1px;
 	width: 100%;
 	margin: 66px auto 38px auto;
-	background-color: #B3B3B3;
+	background-color: var(--color-modal-line);
 	max-width: calc(5 * 77px + 4 * 8px);
 	min-height: 1px;
 }
@@ -430,8 +461,8 @@ footer .link-page {
 	width: 100%;
 	max-height: 36px;
 	height: 100%;
-	background-color: #1D6154;
-	color: #FFFFFF;
+	background-color: var(--color-title);
+	color: var(--color-white);
 	border: none;
 	border-radius: 60px;
 	cursor: pointer;
@@ -471,7 +502,7 @@ footer .link-page {
 .form-group-header {
 	height: 169px;
 	width: 420px;
-	background-color: #E8F1F6;
+	background-color: var(--color-modal-group-header);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -481,11 +512,11 @@ footer .link-page {
 }
 .icon-placeholder {
 	font-size: 68px;
-	color: #B9C5CC;
+	color: var(--color-modal-icon);
 }
 .upload-label {
-	background-color: #CBD6DC;
-	color: #306685;
+	background-color: var(--color-modal-label-background);
+	color: var(--color-modal-label-text);
 	border-radius: 50px;
 	padding: 10px 30px;
 	cursor: pointer;
@@ -498,7 +529,7 @@ display: none;
 }
 .upload-info {
 	font-size: 10px;
-	color: #444444;
+	color: var(--color-modal-info);
 	font-weight: 400;
 }
 
@@ -511,13 +542,20 @@ display: none;
 	flex-direction: column;
 	gap: 11.5px;
 }
+.form-group-footer {
+	position: relative;	
+}
+#error-message-category {
+	position: absolute;
+	top: 124%;
+  left: 50%;
+  transform: translateX(-50%);
+}
 .form-group-main input,
 .select-wrapper {
 	border: none;
 	height: 51px;
 	box-shadow: 0px 4px 14px 0px #00000017;
-}
-.select-wrapper {
 	position: relative;
 }
 .form-group-footer #category {
@@ -534,7 +572,7 @@ display: none;
 	right: 10px;
 	top: 50%;
 	transform: translateY(-50%);
-	color: #6C6C6C;
+	color: var(--color-modal-chevron);
 }
 
 .btn-form-validate {
@@ -543,8 +581,8 @@ display: none;
 	width: 100%;
 	max-height: 36px;
 	height: 26px;
-	background-color: #A7A7A7;
-	color: #FFFFFF;
+	background-color: var(--color-modal-button-form-validate);
+	color: var(--color-white);
 	border: none;
 	border-radius: 60px;
 	cursor: pointer;
