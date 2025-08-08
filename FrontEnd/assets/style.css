@@ -547,7 +547,7 @@ display: none;
 }
 #error-message-category {
 	position: absolute;
-	top: 124%;
+	top: 150%;
   left: 50%;
   transform: translateX(-50%);
 }

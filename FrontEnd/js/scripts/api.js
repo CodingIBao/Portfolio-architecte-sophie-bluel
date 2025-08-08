@@ -1,16 +1,41 @@
 /**
- * Effectue une requête HTTP vers une API avec gestion des erreurs.
+ * Exécute une requête HTTP (GET/POST/PUT/DELETE/PATCH) avec gestion d’erreurs.
  *
- * Peut être utilisée pour des requêtes GET, POST, PUT, DELETE.
- * Gère les réponses incorrectes en lançant une erreur explicite.
+ * - Sérialise automatiquement `body` en JSON si fourni.
+ * - Lève une erreur explicite si `response.ok` est `false` (statuts non 2xx).
+ * - Retourne le JSON parsé, ou `undefined` pour les réponses `204 No Content`.
  *
  * @async
- * @param {string} url - L'URL à interroger.
- * @param {string} [method="GET"] - La méthode HTTP (GET, POST, etc.).
- * @param {Object} [headers={}] - Les en-têtes HTTP à envoyer.
- * @param {Object|null} [body=null] - Les données à envoyer (pour POST, PUT...).
- * @returns {Promise<Object>} - La réponse convertie en JSON.
- * @throws {Error} - En cas de statut HTTP non 2xx ou d'erreur réseau.
+ * @template T
+ * @param {string} url - URL de la ressource à interroger.
+ * @param {"GET"|"POST"|"PUT"|"DELETE"|"PATCH"} [method="GET"] - Méthode HTTP.
+ * @param {Record<string, string>} [headers={}] - En-têtes HTTP à inclure.
+ * @param {unknown} [body=null] - Corps de la requête (sera `JSON.stringify` si non nul).
+ * @returns {Promise<T|undefined>} Données JSON parsées (`T`) ou `undefined` si 204.
+ *
+ * @throws {Error} En cas d’erreur réseau ou de statut HTTP non 2xx.
+ * Le `message` de l’erreur a la forme `"${status} - ${message lisible}"`.
+ *
+ * @example
+ * // GET simple
+ * const works = await fetchData("http://localhost:5678/api/works");
+ *
+ * @example
+ * // (Astuce) Typage dans TON code, pas ici dans la JSDoc :
+ * // const works = /** @type {import("./types").Work[]} *\/ (await fetchData("http://localhost:5678/api/works"));
+ *
+ * @example
+ * // POST JSON
+ * await fetchData("http://localhost:5678/api/works", "POST", {
+ *   "Content-Type": "application/json",
+ *   "Authorization": `Bearer ${token}`
+ * }, { title: "Projet", imageUrl: "/img.png", categoryId: 2 });
+ *
+ * @example
+ * // DELETE (réponse 204 -> retourne undefined)
+ * await fetchData(`http://localhost:5678/api/works/${id}`, "DELETE", {
+ *   "Authorization": `Bearer ${token}`
+ * });
  */
 export async function fetchData(url, method = "GET", headers = {}, body = null) {
   try {
@@ -29,7 +54,7 @@ export async function fetchData(url, method = "GET", headers = {}, body = null) 
       else if (errorCode === 404) message = "Ressource introuvable.";
       else if (errorCode === 500) message = "Erreur interne du serveur.";
 
-      throw new Error(`ERREUR ${errorCode} - ${message}`);
+      throw new Error(`${errorCode} - ${message}`);
     }
     
     if (response.status === 204) return;

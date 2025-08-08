@@ -2,14 +2,25 @@ import { slugify } from "./utils.js";
 import { fetchData } from "./api.js";
 
 /**
- * Module de manipulation du DOM pour l'affichage des projets.
- *
- * Contient des fonctions utilitaires pour créer des éléments HTML
- * et mettre à jour dynamiquement la galerie d'images.
- *
  * @module dom
+ * @description
+ * Utilitaires DOM pour l’affichage des projets et la gestion de l’UI (galerie, modale, erreurs, accessibilité).
+ * Dépend de `fetchData` pour les appels API et de `slugify` pour les URLs/slug.
  */
 
+/**
+ * @typedef {Object} Category
+ * @property {number|string} id
+ * @property {string} name
+ */
+
+/**
+ * @typedef {Object} Work
+ * @property {number|string} id
+ * @property {string} title
+ * @property {string} imageUrl
+ * @property {{ name: string }} category
+ */
 
 const gallery = document.querySelector(".gallery");
 
@@ -38,16 +49,12 @@ const focusableSelectors = `
   [tabindex]:not([tabindex="-1"])
 `;
 
+
 /**
- * Définit le bouton de filtre actif en mettant à jour la classe CSS "active".
- *
- * Supprime la classe "active" et l’attribut `aria-pressed="true"` de tous les boutons,
- * puis les applique uniquement au bouton sélectionné.
- *
- * Utile pour gérer l’accessibilité dans une interface avec des boutons de filtre à sélection unique.
- *
- * @param {HTMLButtonElement} activeButton - Le bouton à activer.
- * @param {HTMLElement} container - Le conteneur qui regroupe tous les boutons de filtre.
+ * Définit le bouton actif (classes + aria-pressed).
+ * @param {HTMLButtonElement} activeButton
+ * @param {HTMLElement} container
+ * @returns {void}
  * @private
  */
 function setActiveFilter(activeButton, container) {
@@ -62,24 +69,16 @@ function setActiveFilter(activeButton, container) {
 
 
 /**
- * Affiche les boutons de filtre à partir d’une liste de catégories.
+ * Affiche des boutons de filtre à partir d'une liste de catégories et met à jour la galerie.
+ * Met à jour l’URL avec `?category=<slug>` et gère l’état visuel/ARIA des boutons.
  *
- * Lorsqu’un filtre est cliqué, la galerie est mise à jour avec les projets
- * correspondant à la catégorie sélectionnée. L’URL est également
- * mise à jour avec `?category=nom`, pour permettre le partage ou la reprise
- * de l’état de filtrage.
- *
- * @param {Object[]} categories - Liste des catégories (ex. : { id, name }).
- * @param {Object[]} works - Liste complète des projets à filtrer.
- *
- * @example
- * displayFilters(
- *   [{ id: 1, name: "Objets" }, { id: 2, name: "Appartements" }],
- *   works
- * );
+ * @param {Category[]} categories - Liste des catégories.
+ * @param {Work[]} works - Tous les projets.
+ * @returns {void}
  */
 export function displayFilters(categories, works) {
   const filtersContainer = document.getElementById("filters")
+  if(!filtersContainer) return;
 
   const updateURL = (categorySlug) => {
     const url = new URL(window.location);
@@ -130,15 +129,12 @@ export function displayFilters(categories, works) {
 
 
 /**
- * Crée dynamiquement un élément HTML avec des attributs et du texte optionnels.
- *
- * @param {string} tag - Le nom de la balise HTML (ex. : "div", "img", "figcaption").
- * @param {Object} [attributes={}] - Objet contenant les paires attribut/valeur à appliquer.
- * @param {string} [textContent=""] - Texte à insérer dans l’élément (facultatif).
- * @returns {HTMLElement} L’élément HTML créé.
- *
+ * @param {keyof HTMLElementTagNameMap} tag
+ * @param {Record<string, string>} [attributes={}]
+ * @param {string} [textContent=""]
+ * @returns {HTMLElement}
  * @example
- * const btn = createElement("button", { class: "active" }, "Tous");
+ * const btn = createElement("button", { class: "btn" }, "Clique moi");
  */
 export function createElement(tag, attributes = {}, textContent ="") {
 
@@ -154,24 +150,16 @@ export function createElement(tag, attributes = {}, textContent ="") {
 
 
 /**
- * Affiche dynamiquement une liste de projets dans la galerie principale.
+ * Rend la galerie principale à partir d’une liste de projets.
+ * Écrase le contenu existant de `.gallery`.
  *
- * Chaque projet est inséré sous forme d’un élément `<figure>` contenant :
- * - une image du projet (`<img>`)
- * - une légende (`<figcaption>`)
- * - un attribut `data-id` correspondant à l’ID du projet, utilisé
- *   pour synchroniser la galerie avec la modale (suppression dynamique).
- *
- * @function displayWorks
- * @param {Object[]} works - Liste des projets à afficher.
- * @param {number|string} works[].id - Identifiant du projet.
- * @param {string} works[].imageUrl - URL de l’image du projet.
- * @param {string} works[].title - Titre du projet.
+ * @param {Work[]} works - Projets à afficher.
+ * @returns {void}
  *
  * @example
  * displayWorks([
- *   { id: 1, imageUrl: "img/chaise.png", title: "Chaise" },
- *   { id: 2, imageUrl: "img/table.png", title: "Table" }
+ *   { id: 1, imageUrl: "img/chaise.png", title: "Chaise", category: { name: "Objets" } },
+ *   { id: 2, imageUrl: "img/table.png", title: "Table",  category: { name: "Objets" } }
  * ]);
  */
 export function displayWorks(works) {
@@ -191,26 +179,54 @@ export function displayWorks(works) {
 
 
 /**
- * Affiche un message d’erreur dans la galerie.
+ * Crée (ou remplace) un message d’erreur accessible dans un conteneur.
+ * - Supprime l’ancien message ayant le même `id` (évite les doublons).
+ * - Ajoute `role="alert"` et `aria-live` pour les lecteurs d’écran.
  *
- * Crée un paragraphe avec le message fourni et l’insère dans la galerie.
- * Utilise la fonction utilitaire `createElement`.
- *
- * @function displayError
- * @param {string} message - Le message d’erreur à afficher.
+ * @param {HTMLElement|string} container - Élément parent ou sélecteur CSS où injecter le message.
+ * @param {string} id - ID unique du message (permet style ciblé + remplacement).
+ * @param {string} message - Texte à afficher (message utilisateur, pas technique).
+ * @param {string} [className="error-message"] - Classe(s) CSS pour le style.
+ * @param {"off"|"polite"|"assertive"} [ariaLive="polite"] - Priorité d’annonce (accessibilité).
+ * @returns {HTMLParagraphElement} Le paragraphe d’erreur injecté.
  *
  * @example
- * displayError("Impossible de charger les projets.");
+ * // Erreur de catégories (près du select)
+ * createErrorMessage(".select-wrapper", "error-message-category", "Impossible de charger les catégories.");
+ *
+ * @example
+ * // Erreur de suppression (dans la modale galerie)
+ * createErrorMessage(".modal-gallery-container", "error-delete-project", "La suppression a échoué. Réessayez plus tard.");
  */
-export function displayError(message) {
-  gallery.innerHTML = "";
+export function createErrorMessage(container, id, message, className = "error-message", ariaLive = "polite" ) {
+  const parent = typeof container === "string" ? document.querySelector(container) : container;
+  if (!parent) return;
+
+  const existing = document.getElementById(id);
+  if (existing) existing.remove();
 
   const errorElement = document.createElement("p");
-  errorElement.id = "error-display-gallery";
-  errorElement.classList.add("error-message");
+  errorElement.id = id;
+  errorElement.classList.add(className);
   errorElement.textContent = message;
+  errorElement.setAttribute("role", "alert");
+  errorElement.setAttribute("aria-live", ariaLive);
 
-  portfolio.appendChild(errorElement);
+  parent.appendChild(errorElement);
+  return errorElement;
+}
+
+
+/**
+ * Affiche un message d’erreur global pour la galerie principale.
+ * Vide la galerie, puis affiche le message dans `#portfolio`.
+ * @param {string} message - Message utilisateur (ex. « Réessayez plus tard. »).
+ * @returns {void}
+ */
+export function displayGalleryError(message) {
+  gallery.innerHTML = "";
+
+  createErrorMessage("#portfolio", "error-display-gallery", message);
 }
 
 
@@ -299,17 +315,9 @@ export function addAdminBanner() {
 
 
 /**
- * Ajoute dynamiquement un lien "Modifier" (icône + texte) à côté du titre "Mes Projets".
- *
- * Ce lien est uniquement visible pour les utilisateurs connectés.
- * Il déclenche l'ouverture de la modale au clic et applique un effet visuel synchronisé au survol.
- *
- * @function addEditLink
- *
- * @example
- * if (isLogIn()) {
- *   addEditLink();
- * }
+ * Ajoute le lien "Modifier" à côté du titre "Mes Projets" (icône + texte).
+ * Visible uniquement pour les utilisateurs connectés (logique gérée en amont).
+ * @returns {void}
  */
 export function addEditLink() {
   const h2 = document.querySelector("#portfolio h2");
@@ -334,13 +342,13 @@ export function addEditLink() {
   const text = document.createElement("span");
   text.textContent = "Modifier";
   
-  h2.replaceWith(wrapper);
-  
   iconLink.appendChild(icon);
   textLink.appendChild(text);
   linkContainer.append(iconLink, textLink);
-  wrapper.append(h2,linkContainer);
 
+  h2.replaceWith(wrapper);
+  wrapper.append(h2,linkContainer);
+  
   textLink.addEventListener("mouseenter", ()=> {
     icon.classList.add("portfolio-hover-sync");
     text.classList.add("portfolio-hover-sync");
@@ -362,55 +370,43 @@ export function addEditLink() {
 
 
 /**
- * Affiche la modale en mode galerie (étape 1) lors du clic sur un lien "Modifier".
- *
- * Cette fonction :
- * - Attache un écouteur à chaque lien ayant la classe `.edit-link`
- * - Affiche la modale et son contenu `#step-one`
- * - Place automatiquement le focus clavier sur le premier élément interactif de la modale
- * - Active le piégeage du focus (`trapFocusInModal`) pour garantir une navigation clavier accessible
- *
- * @function displayModal
- *
- * @example
- * displayModal(); // Prépare l'ouverture accessible de la modale via les liens "Modifier"
+ * Prépare l’ouverture de la modale (étape 1) via les liens `.edit-link`.
+ * Gère l’affichage, positionne le focus sur le premier élément focusable,
+ * puis active le piège de focus clavier.
+ * @returns {void}
  */
 export function displayModal() {
   const editLinks = document.querySelectorAll(".edit-link");
+  if (!editLinks.length) return;
+
+  const onOpen = (e) => {
+    e.preventDefault();
+
+    const modal = document.querySelector(".modal");
+    const modalContentStepOne = document.getElementById("step-one");
+
+    modal.style.display = "block";
+    modalContentStepOne.style.display = "flex";
+
+    const focusableElements = modalContentStepOne.querySelectorAll(focusableSelectors);
+    if (focusableElements.length) focusableElements[0].focus();
+
+    trapFocusInModal();
+  };
 
   editLinks.forEach(link => {
-    link.addEventListener("click", () => {
-      const modal = document.querySelector(".modal");
-      const modalContentStepOne = document.getElementById("step-one");
-
-      modal.style.display = "block";
-      modalContentStepOne.style.display = "flex";
-
-      const focusableElements = modalContentStepOne.querySelectorAll(focusableSelectors);
-
-      if (focusableElements.length) {
-        focusableElements[0].focus();
-      }
-
-      trapFocusInModal();
-    });
+    link.removeEventListener("click",onOpen);
+    link.addEventListener("click", onOpen);
   });
 }
 
 
 /**
- * Gère la fermeture de la modale de différentes manières :
- * - Clic sur l’une des icônes de fermeture (toutes les occurrences de `.modal-icon-close`)
- * - Clic à l’extérieur du contenu de la modale (fond noir)
- * - Appui sur la touche Échap
- *
- * Cette fonction attache les écouteurs nécessaires à tous les boutons de fermeture
- * et garantit la fermeture correcte de toutes les étapes de la modale.
- *
- * @function exitModal
- *
- * @example
- * exitModal(); // Active tous les moyens de fermer la modale
+ * Ajoute tous les comportements de fermeture de la modale :
+ * - Clic sur une icône `.modal-icon-close`
+ * - Clic sur l’overlay (fond)
+ * - Touche `Escape`
+ * @returns {void}
  */
 export function exitModal() {
   const closeIcons = document.querySelectorAll(".modal-icon-close");
@@ -446,12 +442,10 @@ export function exitModal() {
 
 
 /**
- * Crée un élément <figure> pour la galerie modale à partir d’un projet.
- *
- * @param {Object} work - Projet à afficher dans la modale.
- * @param {string} work.imageUrl - L’URL de l’image.
- * @param {number|string} work.id - Identifiant unique du projet.
- * @returns {HTMLElement} Élément <figure> contenant l’image et le bouton de suppression.
+ * Crée la figure de la modale pour un projet.
+ * @param {Work} work
+ * @returns {HTMLElement}
+ * @private
  */
 function createModalFigure(work) {
   const figure = document.createElement("figure");
@@ -475,15 +469,16 @@ function createModalFigure(work) {
 
 
 /**
- * Affiche dynamiquement les projets dans la galerie de la modale.
+ * Rend la galerie interne de la modale (étape 1) à partir d’une liste de projets.
  *
- * Réinitialise d'abord le contenu existant de `.modal-gallery-content`, puis
- * crée un élément `<figure>` pour chaque projet contenant :
- * - l’image du projet
- * - un bouton de suppression lié via `handleDeleteButton`
+ * @param {Work[]} works - Projets à afficher dans la modale.
+ * @returns {void}
  *
- * @function displayModalGallery
- * @param {Object[]} works - Liste des projets à afficher.
+ * @example
+ * displayModalGallery([
+ *   { id: 1, imageUrl: "img/chaise.png", title: "Chaise", category: { name: "Objets" } },
+ *   { id: 2, imageUrl: "img/table.png",  title: "Table",  category: { name: "Objets" } }
+ * ]);
  */
 export function displayModalGallery(works) {
   const modalGalleryContent = document.querySelector(".modal-gallery-content");
@@ -497,24 +492,15 @@ export function displayModalGallery(works) {
 
 
 /**
- * Attache un écouteur d'événement à un bouton de suppression de projet.
+ * Attache la logique de suppression API au bouton fourni.
+ * En cas de succès : supprime la carte du projet dans la modale ET dans la galerie principale.
+ * En cas d’échec : log technique en console + message utilisateur dans la modale.
  *
- * Lors du clic :
- * - Récupère l’ID du projet depuis l’attribut `data-id`
- * - Envoie une requête DELETE à l’API avec le token JWT
- * - Supprime l’élément <figure> dans la modale (si trouvé)
- * - Supprime l’élément <figure> dans la galerie principale (si trouvé)
- * - Gère les erreurs via un bloc try/catch
- *
- * Cette fonction permet une mise à jour immédiate du DOM sans rechargement,
- * tout en évitant les erreurs si les éléments DOM sont manquants.
- *
- * @function handleDeleteButton
- * @param {HTMLButtonElement} button - Le bouton associé à un projet (doit contenir un attribut `data-id`)
+ * @param {HTMLButtonElement} button - Bouton ayant un `data-id` correspondant à l’ID projet.
+ * @returns {void}
  *
  * @example
- * const btn = document.querySelector(".delete-btn");
- * handleDeleteButton(btn);
+ * handleDeleteButton(document.querySelector(".delete-btn"));
  */
 export function handleDeleteButton(button) {
   button.addEventListener("click", async (e)=> {
@@ -529,30 +515,24 @@ export function handleDeleteButton(button) {
         "Content-Type": "application/json"
       });
 
+      const old = document.getElementById("error-delete-project");
+      if (old) old.remove();
+
       if (figure) figure.remove();
       if (galleryFigure) galleryFigure.remove();
 
     } catch (error) {
-      const errorMessage = document.getElementById("error-delete-project");
-      errorMessage.innerHTML = error
+      console.error("[handleDeleteButton]", error.message)
+      createErrorMessage(".modal-gallery-container", "error-delete-project", "La suppression a échoué. Réessayez plus tard.");
     }
   });
 }
 
 
 /**
- * Affiche l’étape 2 de la modale ("Ajout photo") et masque l’étape 1 ("Galerie").
- *
- * Lors du clic sur le bouton "Ajouter une photo", cette fonction :
- * - Masque la section `#step-one`
- * - Affiche la section `#step-two` en `display: flex`
- * - Place le focus clavier sur le premier élément interactif de l’étape 2
- * - Active le piégeage du focus pour limiter la navigation au sein de la modale
- *
- * @function displayModalAddPhoto
- *
- * @example
- * displayModalAddPhoto(); // Passe à l'étape 2 de la modale et piège le focus
+ * Passe de l’étape 1 (galerie) à l’étape 2 (formulaire "Ajout photo").
+ * Charge les catégories, focalise le premier élément focusable, et piège le focus.
+ * @returns {void}
  */
 export function displayModalAddPhoto() {
   const modalContentStepOne = document.getElementById("step-one");
@@ -577,19 +557,9 @@ export function displayModalAddPhoto() {
 
 
 /**
- * Gère le retour de la modale depuis l'étape 2 (ajout photo) vers l'étape 1 (galerie).
- *
- * Cette fonction :
- * - Cible l’icône de retour (flèche gauche)
- * - Cache le contenu de l’étape 2
- * - Réaffiche le contenu de l’étape 1 (galerie de projets)
- *
- * Elle est appelée uniquement si l'utilisateur est connecté et que la modale est active.
- *
- * @function handleModalBack
- *
- * @example
- * handleModalBack(); // Permet de revenir à la galerie modale
+ * Revient de l’étape 2 (formulaire) à l’étape 1 (galerie) de la modale.
+ * Replace le focus correctement et maintient le piège de focus.
+ * @returns {void}
  */
 export function handleModalBack() {
   const modalIconBack = document.querySelector(".modal-icon-back");
@@ -612,16 +582,9 @@ export function handleModalBack() {
 
 
 /**
- * Permet à l'utilisateur d'ouvrir la boîte de dialogue de sélection de fichier
- * en appuyant sur "Entrée" lorsqu'il est focus sur le label "+ ajouter photo".
- *
- * Utile pour améliorer l’accessibilité clavier de l’upload de fichier,
- * tout en maintenant l’input de type file masqué.
- *
- * @function enableUploadLabelTrigger
- *
- * @example
- * enableUploadLabelTrigger(); // rend le label clavier-accessible
+ * Rend le label d’upload focusable au clavier :
+ * Touche `Enter` sur le label déclenche l’ouverture du sélecteur de fichier.
+ * @returns {void}
  */
 export function enableUploadLabelTrigger() {
   const uploadLabel = document.querySelector(".upload-label");
@@ -636,15 +599,19 @@ export function enableUploadLabelTrigger() {
 
 
 /**
- * Piège le focus clavier à l'intérieur de la modale active (step-one ou step-two).
+ * Élément DOM représentant la section active de la modale sur laquelle appliquer le piège clavier.
+ * Mis à jour à chaque appel de `trapFocusInModal`.
+ * @type {HTMLElement|null}
+ * @private
+ */
+let currentTrapTarget = null;
+
+
+/**
+ * Active le piège de focus clavier sur la section de modale actuellement visible.
+ * Empêche la touche Tab de sortir de la modale.
  *
- * Lorsqu'on utilise la touche Tab, empêche que le focus sorte de la modale
- * en le redirigeant vers le premier ou dernier élément focusable selon la direction.
- *
- * @function trapFocusInModal
- *
- * @example
- * trapFocusInModal(); // Active le piégeage du focus clavier dans la modale affichée
+ * @returns {void}
  */
 export function trapFocusInModal() {
   const modal = document.querySelector(".modal");
@@ -661,14 +628,10 @@ export function trapFocusInModal() {
 
 
 /**
- * Élément DOM représentant la section active de la modale sur laquelle appliquer le piège clavier.
- * @type {HTMLElement|null}
- */
-let currentTrapTarget = null;
-
-/**
- * Gère la navigation clavier (Tab / Shift+Tab) à l'intérieur d'un conteneur focusable.
- * @param {KeyboardEvent} e - L'événement clavier
+ * Gère le piégeage du focus (Tab / Shift+Tab).
+ * @param {KeyboardEvent} e
+ * @returns {void}
+ * @private
  */
 function handleTrap(e) {
   if (!currentTrapTarget || e.key !== "Tab") return;
@@ -688,19 +651,23 @@ function handleTrap(e) {
 }
 
 
+/**
+ * Charge les catégories via l’API et remplit le `<select id="category">`.
+ * - Nettoie un éventuel message d’erreur précédent si le chargement réussit.
+ * - Affiche un message utilisateur en cas d’échec et loggue l’erreur technique.
+ *
+ * @returns {Promise<void>} Résout quand le `<select>` est peuplé ou le message d’erreur affiché.
+ * @throws {Error} Propage l’erreur si `fetchData` lance, mais ici elle est capturée pour l’UI.
+ */
 export async function populateCategorySelect() {
-  const errorContainer = document.getElementById("error-message-category");
   const categorySelect = document.getElementById("category");
   
   try {
     const categories = await fetchData("http://localhost:5678/api/categories");
+    const old = document.getElementById("error-message-category");
+    if (old) old.remove();
     
     categorySelect.innerHTML = "";
-    if (errorContainer) {
-      errorContainer.textContent = "";
-      errorContainer.removeAttribute("role");
-      errorContainer.removeAttribute("aria-live");
-    }
 
     const emptyOption = document.createElement("option");
     emptyOption.value = "";
@@ -716,8 +683,7 @@ export async function populateCategorySelect() {
       categorySelect.appendChild(option);
     });
   } catch (error) {
-    if (errorContainer) {
-      errorContainer.textContent = "Erreur lors du chargement des catégories : ";
-    }
+    console.error("[populateCategorySelect]", error.message);
+    createErrorMessage(".select-wrapper", "error-message-category", "Impossible de charger les catégories. Veuillez réessayer.");
   }
 }

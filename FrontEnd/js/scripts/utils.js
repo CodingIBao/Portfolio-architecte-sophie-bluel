@@ -1,18 +1,10 @@
 /**
  * Retourne une liste de catégories uniques à partir d’un tableau de projets.
  *
- * Pour chaque projet, la fonction récupère l’objet `category`, puis filtre
- * les doublons en se basant sur l’identifiant (`category.id`).
+ * Les doublons sont supprimés en se basant uniquement sur `category.id`.
  *
- * Bien que l’identifiant soit utilisé pour détecter l’unicité,
- * c’est le nom (`category.name`) qui est utilisé dans l’interface utilisateur pour le filtrage.
- *
- * @function getUniqueCategories
- * @param {Object[]} works - Tableau d’objets projet, chacun contenant une propriété `category`.
- * @param {Object} works[].category - Catégorie associée à un projet.
- * @param {number} works[].category.id - Identifiant unique de la catégorie.
- * @param {string} works[].category.name - Nom lisible de la catégorie.
- * @returns {Object[]} - Tableau des catégories uniques (exemple : { id, name }).
+ * @param {Work[]} works - Tableau d’objets projet contenant une propriété `category`.
+ * @returns {Category[]} Tableau des catégories uniques.
  *
  * @example
  * const works = [
@@ -22,9 +14,8 @@
  *   { id: 4, title: "Villa Balisière", category: { id: 2, name: "Appartements" } }
  * ];
  *
- * const uniqueCategories = getUniqueCategories(works);
- * // Résultat :
- * // [
+ * getUniqueCategories(works);
+ * // => [
  * //   { id: 1, name: "Objets" },
  * //   { id: 2, name: "Appartements" },
  * //   { id: 3, name: "Hotels & restaurants" }
@@ -47,19 +38,14 @@ export function getUniqueCategories(works) {
 /**
  * Extrait le nom de la catégorie depuis les paramètres de l'URL.
  *
- * Analyse la chaîne de requête de l'URL (ex. : `?category=salon`) et retourne
- * le nom de la catégorie sous forme de chaîne. Si aucun paramètre n'est présent
- * ou si la valeur est "all", la fonction retourne `null`.
+ * Retourne toujours la valeur en minuscule. Si le paramètre `category`
+ * est absent ou égal à `"all"`, retourne `null`.
  *
- * @returns {string|null} Le nom de la catégorie (ex. : "salon", "cuisine") ou `null`.
- *
- * @example
- * // URL : http://localhost:3000/?category=salon
- * const name = getCategoryNameFromQueryParam(); // "salon"
+ * @returns {string|null} Nom de la catégorie en minuscule ou `null`.
  *
  * @example
- * // URL : http://localhost:3000/?category=all
- * const name = getCategoryNameFromQueryParam(); // null
+ * // URL : http://localhost:3000/?category=Salon
+ * getCategoryNameFromQueryParam(); // "salon"
  */
 export function getCategoryNameFromQueryParam () {
   const params = new URLSearchParams(window.location.search);
@@ -71,8 +57,16 @@ export function getCategoryNameFromQueryParam () {
 /**
  * Convertit un texte en slug compatible avec une URL.
  *
- * @param {string} text - Le texte à transformer.
- * @returns {string} - Le slug généré (ex. : "Hôtels & Restaurants" → "hotels-restaurants").
+ * - Met en minuscule
+ * - Supprime les accents et caractères spéciaux
+ * - Remplace les espaces par des tirets
+ * - Remplace `&` par "et"
+ *
+ * @param {string} text - Texte à transformer.
+ * @returns {string} Slug généré.
+ *
+ * @example
+ * slugify("Hôtels & Restaurants"); // "hotels-et-restaurants"
  */
 export function slugify(text) {
   return text
@@ -104,12 +98,15 @@ export function isLogIn() {
 /**
  * Gère la déconnexion de l'utilisateur.
  *
- * Si l'utilisateur est connecté (`isAuth` est `true`), cette fonction
- * ajoute un écouteur sur le lien "logout" pour :
- * - Supprimer le token stocké dans le localStorage
- * - Rediriger vers la page de connexion
+ * Si `isAuth` est vrai :
+ * - Ajoute un listener sur le lien "logout"
+ * - Supprime le token du `localStorage`
+ * - Redirige vers la page de connexion
  *
  * @param {boolean} isAuth - Indique si l'utilisateur est connecté.
+ *
+ * @example
+ * logOut(isLogIn());
  */
 export function logOut(isAuth) {
   const logOut = document.getElementById("link-login");
