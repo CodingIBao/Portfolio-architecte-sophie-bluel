@@ -29,7 +29,7 @@
  * @property {{ name: string }} category
  */
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayGalleryError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack, enableUploadLabelTrigger } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayGalleryError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack, enableUploadLabelTrigger, enableImagePreview } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 
@@ -68,6 +68,7 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
       displayModalAddPhoto();
       handleModalBack();
       enableUploadLabelTrigger();
+      enableImagePreview();
     }
 
     const categorySlug = getCategoryNameFromQueryParam();

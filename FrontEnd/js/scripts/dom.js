@@ -687,3 +687,133 @@ export async function populateCategorySelect() {
     createErrorMessage(".select-wrapper", "error-message-category", "Impossible de charger les catégories. Veuillez réessayer.");
   }
 }
+
+
+/**
+ * Nettoie un nom de fichier pour l'utiliser dans un attribut alt ou un affichage.
+ * - Supprime l'extension du fichier
+ * - Remplace les caractères spéciaux par un espace
+ * - Conserve les lettres (y compris accentuées), chiffres, espaces, tirets et apostrophes
+ * - Tronque le nom à 100 caractères maximum et ajoute "..." si nécessaire
+ *
+ * @param {string} fileName - Nom complet du fichier (ex. "photo-vacances@été!.jpg")
+ * @returns {string} Nom nettoyé et prêt à l'affichage (ex. "photo vacances été")
+ *
+ * @example
+ * cleanFileName("lampadaire-tokyo@2025!.png");
+ * // Retourne: "lampadaire tokyo 2025"
+ */
+function cleanFileName(fileName) {
+  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+  const cleanedName = nameWithoutExt.replace(/[^a-zA-ZÀ-ÿ0-9\s\-']/g, " ");
+  return cleanedName.length > 100
+   ? cleanedName.slice(0,100) + "..."
+   :cleanedName;
+}
+
+
+/**
+ * Libère une URL temporaire créée avec `URL.createObjectURL` pour éviter les fuites mémoire.
+ *
+ * @function revokePreviewURL
+ * @param {{ value: string|null }} urlRef - Objet contenant la référence actuelle de l'URL.
+ * @returns {void}
+ *
+ * @example
+ * const objectURLRef = { value: URL.createObjectURL(file) };
+ * revokePreviewURL(objectURLRef);
+ * // Libère l'URL et remet objectURLRef.value à null
+ */
+function revokePreviewURL(urlRef) {
+  if (urlRef.value) {
+    URL.revokeObjectURL(urlRef.value);
+    urlRef.value = null;
+  }
+}
+
+
+/**
+ * Rend une image cliquable et focusable pour rouvrir un sélecteur de fichier.
+ * - Clic sur l'image déclenche `fileInput.click()`
+ * - Touche `Enter` fait la même action
+ * - Ajoute les attributs d’accessibilité nécessaires (`role="button"`, `aria-label`)
+ *
+ * @function attachImageClickToFileInput
+ * @param {HTMLImageElement} imageElement - L'image d'aperçu.
+ * @param {HTMLInputElement} fileInput - L'input de type "file" à déclencher.
+ * @returns {void}
+ *
+ * @example
+ * attachImageClickToFileInput(document.querySelector(".preview-image"), document.getElementById("image"));
+ */
+function attachImageClickToFileInput(imageElement, fileInput) {
+  imageElement.addEventListener("click", () => fileInput.click())
+
+  imageElement.tabIndex = 0;
+  imageElement.setAttribute("role", "button");
+  imageElement.setAttribute("aria-label", "Changer l'image sélectionnée");
+  imageElement.addEventListener("keydown", (e) => {
+    if (e.key ==="Enter") {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+}
+
+
+/**
+ * Active la prévisualisation interactive d'une image sélectionnée dans un `<input type="file">`.
+ *
+ * Fonctionnalités :
+ * - Vide le contenu existant du conteneur `.form-group-header`
+ * - Affiche une balise `<img>` avec l'aperçu du fichier sélectionné
+ * - Génère dynamiquement l'attribut `alt` en nettoyant le nom du fichier (`cleanFileName`)
+ * - Applique la classe `.preview-image` pour le style
+ * - Rend l'image cliquable et focusable pour permettre de re-sélectionner un fichier
+ *   (via clic souris ou touche `Enter`)
+ * - Gère la libération de l'URL temporaire (via `revokePreviewURL`) pour éviter les fuites mémoire
+ *
+ * @function enableImagePreview
+ * @returns {void}
+ *
+ * @example
+ * // HTML :
+ * // <div class="form-group-header">
+ * //   <i class="fa-regular fa-image icon-placeholder"></i>
+ * //   <label for="image" class="upload-label">+ ajouter photo</label>
+ * //   <span class="upload-info">jpg, png 4mo max</span>
+ * // </div>
+ * // <input type="file" id="image" accept="image/*" />
+ *
+ * enableImagePreview();
+ * // Après sélection, `.form-group-header` contient :
+ * // <img src="blob:..." alt="Prévisualisation de l'image mon-fichier" class="preview-image">
+ */
+export function enableImagePreview() {
+  const fileInput = document.getElementById("image");
+  const formGroupHeader = document.querySelector(".form-group-header");
+
+  const objectURLRef = { value: null };
+
+  fileInput.addEventListener("change", () => {
+    if (!fileInput.files || fileInput.files.length === 0) return;
+
+    const file = fileInput.files[0];
+
+    revokePreviewURL(objectURLRef);
+    objectURLRef.value = URL.createObjectURL(file);
+
+    formGroupHeader.innerHTML = "";
+
+    const previewImage = document.createElement("img");
+    previewImage.src = objectURLRef.value;
+    previewImage.alt = `Prévisualisation de l'image ${cleanFileName(file.name)}`;
+    previewImage.classList.add("preview-image");
+
+    attachImageClickToFileInput(previewImage, fileInput);
+    
+    formGroupHeader.appendChild(previewImage);
+    previewImage.focus()
+  });
+}
+

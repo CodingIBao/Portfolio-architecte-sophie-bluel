@@ -102,6 +102,7 @@ section {
 	justify-content: space-between;
 	max-width: 1140px;
 	margin: 48px auto 138px auto;
+	padding: 0 10px;
 }
 
 h1{
@@ -140,6 +141,10 @@ nav li {
 .link-logo-insta img {
 	width: 19px;
 	height: auto;
+}
+
+main {
+	padding: 0 10px;
 }
 
 #introduction {
@@ -297,7 +302,7 @@ footer {
 footer nav {
 	max-width: 1260px;
 	margin: auto;
-	padding: 22px 0;
+	padding: 22px 10px;
 }
 footer nav ul {
 	display: flex;
@@ -365,7 +370,7 @@ footer .link-page {
 	height: 100vh;
 }
 
-/** MODAL STEP ONE **/
+/************* MODAL step-one ***********/
 #step-one {
 	display: none;
 }
@@ -472,7 +477,7 @@ footer .link-page {
 	margin-bottom: 42px;
 }
 
-/** MODAL STEP TWO **/
+/************* MODAL step-two ***********/
 #step-two {
 	display: none;
 }
@@ -533,6 +538,7 @@ display: none;
 	font-weight: 400;
 }
 
+/************* MODAL step-two Formulary ***********/
 .form-group-main {
 	margin-bottom: 20px;
 }
@@ -589,4 +595,19 @@ display: none;
 	font-weight: 700;
 	font-family: syne;
 	font-size: 14px;
+}
+
+
+.form-group-main input[type="text"],
+.form-group-footer input[type="category"] {
+	padding-left: 18px;
+	font-size: 14px;
+	font-weight: 400;
+	color: var(--color-modal-info);
+}
+.preview-image {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: cover;
+	cursor: pointer;
 }
