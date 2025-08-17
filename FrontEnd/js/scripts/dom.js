@@ -402,11 +402,23 @@ export function displayModal() {
 
 
 /**
- * Ajoute tous les comportements de fermeture de la modale :
- * - Clic sur une icône `.modal-icon-close`
- * - Clic sur l’overlay (fond)
- * - Touche `Escape`
+ * Ajoute tous les comportements de fermeture de la modale.
+ *
+ * Actions gérées :
+ * - Clic sur une icône de fermeture `.modal-icon-close`
+ * - Clic sur l’overlay (fond noir autour de la modale)
+ * - Appui sur la touche `Escape` lorsque la modale est ouverte
+ *
+ * Lors de la fermeture, cette fonction :
+ * - Masque la modale et ses deux contenus (`#step-one` et `#step-two`)
+ * - Réinitialise l’UI d’upload d’image en appelant `resetImagePreview()`
+ *
+ * @function exitModal
  * @returns {void}
+ *
+ * @example
+ * // Active la fermeture de la modale et la réinitialisation du formulaire
+ * exitModal();
  */
 export function exitModal() {
   const closeIcons = document.querySelectorAll(".modal-icon-close");
@@ -415,27 +427,29 @@ export function exitModal() {
   const modalContentStepOne = document.getElementById("step-one");
   const modalContentStepTwo = document.getElementById("step-two");
 
+  const closeModal = () => {
+  const stepTwoWasOpen = getComputedStyle(modalContentStepTwo).display !== "none";
+
+    modal.style.display = "none";
+    modalContentStepOne.style.display = "none";
+    modalContentStepTwo.style.display = "none";
+    
+    if (stepTwoWasOpen) resetImagePreview();
+  }
+
   closeIcons.forEach(icon => {
-    icon.addEventListener("click", () => {
-      modal.style.display = "none";
-      modalContentStepOne.style.display = "none";
-      modalContentStepTwo.style.display = "none";
-    });
+    icon.addEventListener("click", closeModal);
   });
 
   modalContainer.addEventListener("click", (event)=> {
     if (event.target === modalContainer) {
-      modal.style.display = "none";
-      modalContentStepOne.style.display = "none";
-      modalContentStepTwo.style.display = "none";
+      closeModal();
     }
   });
 
   document.addEventListener("keydown", (event)=> {
     if (event.key === "Escape" && modal.style.display === "block") {
-      modal.style.display = "none";
-      modalContentStepOne.style.display = "none";
-      modalContentStepTwo.style.display = "none";
+      closeModal();
     }
   });
 }
@@ -724,10 +738,11 @@ function cleanFileName(fileName) {
  * revokePreviewURL(objectURLRef);
  * // Libère l'URL et remet objectURLRef.value à null
  */
-function revokePreviewURL(urlRef) {
-  if (urlRef.value) {
-    URL.revokeObjectURL(urlRef.value);
-    urlRef.value = null;
+function revokePreviewURLFromInput(input) {
+  const url = input?.dataset?.previewURL;
+  if (url) {
+    URL.revokeObjectURL(url);
+    input.dataset.previewURL = "";
   }
 }
 
@@ -746,7 +761,7 @@ function revokePreviewURL(urlRef) {
  * @example
  * attachImageClickToFileInput(document.querySelector(".preview-image"), document.getElementById("image"));
  */
-function attachImageClickToFileInput(imageElement, fileInput) {
+function attachImageClickToFileInput(fileInput, imageElement) {
   imageElement.addEventListener("click", () => fileInput.click())
 
   imageElement.tabIndex = 0;
@@ -758,6 +773,59 @@ function attachImageClickToFileInput(imageElement, fileInput) {
       fileInput.click();
     }
   });
+}
+
+
+/**
+ * Réinitialise l’UI d’upload de la modale (step-two) en remettant le placeholder.
+ *
+ * - Vide la valeur de l’input file `#image` (supprime la sélection en cours)
+ * - Reconstruit le contenu de `.form-group-header` (icône, label, info)
+ * - Ré-attache l’input existant au label (évite de recréer un nouvel input et de perdre les listeners)
+ * - Active l’accessibilité clavier : touche Enter sur le label ouvre le sélecteur de fichier
+ *
+ * À appeler lors de la fermeture de la modale (croix / clic hors modale / Échap)
+ * et/ou lors du retour à l’étape 1 via la flèche.
+ *
+ * @function resetImagePreview
+ * @returns {void}
+ *
+ * @example
+ * // Fermer la modale puis réinitialiser l’UI d’upload :
+ * modal.style.display = "none";
+ * resetImagePreview();
+ */
+function resetImagePreview() {
+  const formGroupHeader = document.querySelector(".form-group-header");
+  const fileInput = document.getElementById("image");
+
+  if (!formGroupHeader || !fileInput) return;
+
+  revokePreviewURLFromInput(fileInput);
+  fileInput.value = "";
+
+  formGroupHeader.innerHTML = "";
+
+  const icon = document.createElement("i");
+  icon.className = "fa-regular fa-image icon-placeholder";
+
+  const label = document.createElement("label");
+  label.htmlFor = "image";
+  label.className = "upload-label";
+  label.tabIndex = 0;
+  label.innerHTML = `<span class="upload-text">+ ajouter photo</span>`;
+
+  label.appendChild(fileInput);
+
+  const info = document.createElement("span");
+  info.className = "upload-info";
+  info.textContent = "jpg, png 4mo max";
+
+  label.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") fileInput.click();
+  });
+
+  formGroupHeader.append(icon, label, info);
 }
 
 
@@ -793,26 +861,26 @@ export function enableImagePreview() {
   const fileInput = document.getElementById("image");
   const formGroupHeader = document.querySelector(".form-group-header");
 
-  const objectURLRef = { value: null };
-
   fileInput.addEventListener("change", () => {
     if (!fileInput.files || fileInput.files.length === 0) return;
 
     const file = fileInput.files[0];
 
-    revokePreviewURL(objectURLRef);
-    objectURLRef.value = URL.createObjectURL(file);
+    revokePreviewURLFromInput(fileInput);
+
+    const objectURL = URL.createObjectURL(file);
+    fileInput.dataset.previewURL = objectURL;
 
     formGroupHeader.innerHTML = "";
 
     const previewImage = document.createElement("img");
-    previewImage.src = objectURLRef.value;
+    previewImage.src = objectURL;
     previewImage.alt = `Prévisualisation de l'image ${cleanFileName(file.name)}`;
     previewImage.classList.add("preview-image");
 
-    attachImageClickToFileInput(previewImage, fileInput);
+    attachImageClickToFileInput(fileInput, previewImage);
     
-    formGroupHeader.appendChild(previewImage);
+    formGroupHeader.append(fileInput, previewImage);
     previewImage.focus()
   });
 }
