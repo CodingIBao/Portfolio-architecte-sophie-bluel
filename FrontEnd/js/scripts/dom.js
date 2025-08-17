@@ -885,3 +885,63 @@ export function enableImagePreview() {
   });
 }
 
+
+/**
+ * Active une validation en temps réel du champ titre de la modale (`#title`).
+ *
+ * Règles appliquées :
+ * - Limite la longueur à 100 caractères
+ * - Autorise uniquement : lettres (y compris accentuées), chiffres, espaces,
+ *   tirets, apostrophes et guillemets
+ * - Bloque les frappes interdites (via `keypress`)
+ * - Nettoie les collages pour supprimer les caractères non autorisés
+ * - Filet de sécurité : nettoie à chaque `input`
+ *
+ * @function isSafeTitle
+ * @returns {void}
+ *
+ * @example
+ * // HTML
+ * // <input type="text" id="title" name="title" required />
+ *
+ * // JS
+ * isSafeTitle();
+ * // → L’utilisateur ne peut saisir que des caractères sûrs
+ */
+export function isSafeTitle() {
+  const titleInput = document.getElementById("title");
+  if (!titleInput) return;
+
+  titleInput.setAttribute("maxlength", "100");
+
+  const ALLOWED_CHAR = /^[A-Za-zÀ-ÿ0-9\s\-'""]$/u;
+
+  const sanitize = (text) => {
+    return text.replace(/[^A-Za-zÀ-ÿ0-9 \-'""]/gu, "").slice(0, 100);
+  };
+
+  titleInput.addEventListener("keypress", (e) => {
+    if (!ALLOWED_CHAR.test(e.key)) {
+      e.preventDefault();
+    }
+  });
+
+  titleInput.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text") || "";
+    const cleaned = sanitize(text);
+
+    const start = titleInput.selectionStart ?? titleInput.value.length;
+    const end = titleInput.selectionEnd ?? titleInput.value.length;
+    const newVal = titleInput.value.slice(0, start) + cleaned + titleInput.value.slice(end);
+
+    titleInput.value = newVal.slice(0, 100);
+  });
+
+  titleInput.addEventListener("input", () => {
+    const cleaned = sanitize(titleInput.value);
+    if (cleaned !== titleInput.value) {
+      titleInput.value = cleaned;
+    }
+  });
+}
