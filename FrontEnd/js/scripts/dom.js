@@ -434,7 +434,10 @@ export function exitModal() {
     modalContentStepOne.style.display = "none";
     modalContentStepTwo.style.display = "none";
     
-    if (stepTwoWasOpen) resetImagePreview();
+    if (stepTwoWasOpen) {
+      resetImagePreview();
+      resetTitleInput();
+    }
   }
 
   closeIcons.forEach(icon => {
@@ -754,8 +757,8 @@ function revokePreviewURLFromInput(input) {
  * - Ajoute les attributs d’accessibilité nécessaires (`role="button"`, `aria-label`)
  *
  * @function attachImageClickToFileInput
- * @param {HTMLImageElement} imageElement - L'image d'aperçu.
  * @param {HTMLInputElement} fileInput - L'input de type "file" à déclencher.
+ * @param {HTMLImageElement} imageElement - L'image d'aperçu.
  * @returns {void}
  *
  * @example
@@ -914,10 +917,10 @@ export function isSafeTitle() {
 
   titleInput.setAttribute("maxlength", "100");
 
-  const ALLOWED_CHAR = /^[A-Za-zÀ-ÿ0-9\s\-'""]$/u;
+  const ALLOWED_CHAR = /^[A-Za-zÀ-ÿ0-9\s\-'"`]$/u;
 
   const sanitize = (text) => {
-    return text.replace(/[^A-Za-zÀ-ÿ0-9 \-'""]/gu, "").slice(0, 100);
+    return text.replace(/[^A-Za-zÀ-ÿ0-9 \-'"`]/gu, "").slice(0, 100);
   };
 
   titleInput.addEventListener("keypress", (e) => {
@@ -944,4 +947,32 @@ export function isSafeTitle() {
       titleInput.value = cleaned;
     }
   });
+}
+
+/**
+ * Réinitialise le champ titre (#title) du formulaire d’ajout de projet.
+ *
+ * - Cible l’élément `<input type="text" id="title">`
+ * - Vide sa valeur si l’élément existe dans le DOM
+ * - N’effectue aucune action si l’élément n’est pas trouvé
+ *
+ * Cette fonction est appelée lors de la fermeture de la modale
+ * pour garantir que le champ titre est toujours remis à zéro
+ * avant la prochaine ouverture.
+ *
+ * @function resetTitleInput
+ * @returns {void}
+ *
+ * @example
+ * // Après saisie dans le champ titre :
+ * document.getElementById("title").value = "Lampe de chevet";
+ *
+ * resetTitleInput();
+ * // → Le champ est vidé : ""
+ */
+function resetTitleInput() {
+  const titleInput = document.getElementById("title");
+  if (titleInput) {
+    titleInput.value = "";
+  }
 }
