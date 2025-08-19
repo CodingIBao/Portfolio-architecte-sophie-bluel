@@ -920,7 +920,11 @@ export function isSafeTitle() {
   const ALLOWED_CHAR = /^[A-Za-zÀ-ÿ0-9\s\-'"`]$/u;
 
   const sanitize = (text) => {
-    return text.replace(/[^A-Za-zÀ-ÿ0-9 \-'"`]/gu, "").slice(0, 100);
+    const cleaned = text
+    .replace(/[^A-Za-zÀ-ÿ0-9 \-'"`]/gu, "") // enlève caractères interdits
+    .replace(/\s{2,}/g, " ") // condense espaces multiples
+    .replace(/^\s+/g, ""); // supprime espaces au début
+    return cleaned.slice(0, 100); // limite longueur
   };
 
   titleInput.addEventListener("keypress", (e) => {
@@ -975,4 +979,61 @@ function resetTitleInput() {
   if (titleInput) {
     titleInput.value = "";
   }
+}
+
+
+/**
+ * Active une validation en temps réel du formulaire d’upload (step-two).
+ *
+ * Fonctionnalités :
+ * - Vérifie si les 3 champs obligatoires sont remplis :
+ *   - un fichier sélectionné dans `#image`
+ *   - un titre non vide dans `#title` (espaces ignorés)
+ *   - une catégorie choisie dans `#category`
+ * - Désactive le bouton "Valider" (`.btn-form-validate`) tant que le formulaire est incomplet
+ * - Applique dynamiquement une classe CSS d’état :
+ *   - `.btn-form-is-valid` quand le formulaire est valide
+ *   - `.btn-form-not-valid` quand le formulaire est invalide
+ * - Écoute les événements `change` (fichier/catégorie) et `input` (titre)
+ *   pour réévaluer l’état en temps réel
+ *
+ * @function enableUploadFormValidation
+ * @returns {void}
+ *
+ * @example
+ * // HTML :
+ * // <form id="upload-form">
+ * //   <input type="file" id="image" required>
+ * //   <input type="text" id="title" required>
+ * //   <select id="category" required>…</select>
+ * //   <button type="submit" class="btn-form-validate btn-form-not-valid" disabled>Valider</button>
+ * // </form>
+ *
+ * // JS :
+ * enableUploadFormValidation();
+ * // → Le bouton reste grisé tant que les 3 champs ne sont pas remplis
+ */
+export function enableUploadFormValidation() {
+  const form = document.getElementById("upload-form");
+  const fileInput = document.getElementById("image");
+  const titleInput = document.getElementById("title");
+  const categorySelect = document.getElementById("category");
+  const submitBtn = document.querySelector(".btn-form-validate");
+
+  const updateState = () => {
+    const isValid =
+      fileInput.files && fileInput.files.length > 0 &&
+      titleInput.value.trim().length > 0 &&
+      categorySelect.value !== "";
+  
+    submitBtn.disabled = !isValid;
+    submitBtn.classList.remove("btn-form-is-valid", "btn-form-not-valid");
+    submitBtn.classList.add(isValid?"btn-form-is-valid" : "btn-form-not-valid");
+  }
+
+  updateState();
+
+  fileInput.addEventListener("change", updateState);
+  titleInput.addEventListener("input", updateState);
+  categorySelect.addEventListener("change", updateState);
 }

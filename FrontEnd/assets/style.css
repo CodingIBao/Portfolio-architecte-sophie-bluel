@@ -587,16 +587,21 @@ display: none;
 	width: 100%;
 	max-height: 36px;
 	height: 26px;
-	background-color: var(--color-modal-button-form-validate);
 	color: var(--color-white);
 	border: none;
 	border-radius: 60px;
-	cursor: pointer;
 	font-weight: 700;
 	font-family: syne;
 	font-size: 14px;
 }
-
+.btn-form-not-valid {
+	cursor: not-allowed;
+	background-color: var(--color-modal-button-form-validate);
+}
+.btn-form-is-valid {
+	cursor: pointer;
+	background-color: var(--color-title);
+}
 
 .form-group-main input[type="text"],
 .form-group-footer input[type="category"] {
