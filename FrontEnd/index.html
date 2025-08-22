@@ -53,7 +53,7 @@
           <h2 class="modal-title">Ajout photo</h2>
           <form id="upload-form" enctype="multipart/form-data">
             <ul class="form-group">
-              <li class="form-group-header">
+              <li id="form-group-header">
                 <i class="fa-regular fa-image icon-placeholder"></i>
                 <label for="image" class="upload-label" tabindex="0">
                   <span class="upload-text">+ ajouter photo</span>
@@ -67,11 +67,11 @@
                 </label>
                 <span class="upload-info">jpg, png 4mo max</span>
               </li>
-              <li class="form-group-main">
+              <li id="form-group-main">
                 <label for="title">Titre</label>
                 <input type="text" id="title" name="title" required />
               </li>
-              <li class="form-group-footer">
+              <li id="form-group-footer">
                 <label for="category">Catégorie</label>
                 <div class="select-wrapper">
                   <select id="category" name="category" required>

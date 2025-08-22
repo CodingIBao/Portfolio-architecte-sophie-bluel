@@ -799,7 +799,7 @@ function attachImageClickToFileInput(fileInput, imageElement) {
  * resetImagePreview();
  */
 function resetImagePreview() {
-  const formGroupHeader = document.querySelector(".form-group-header");
+  const formGroupHeader = document.getElementById("form-group-header");
   const fileInput = document.getElementById("image");
 
   if (!formGroupHeader || !fileInput) return;
@@ -862,7 +862,7 @@ function resetImagePreview() {
  */
 export function enableImagePreview() {
   const fileInput = document.getElementById("image");
-  const formGroupHeader = document.querySelector(".form-group-header");
+  const formGroupHeader = document.getElementById("form-group-header");
 
   fileInput.addEventListener("change", () => {
     if (!fileInput.files || fileInput.files.length === 0) return;
@@ -979,6 +979,54 @@ function resetTitleInput() {
   if (titleInput) {
     titleInput.value = "";
   }
+  const errorMessage = document.getElementById("error-message-title");
+  if (errorMessage) errorMessage.remove();
+}
+
+
+/**
+ * Active la validation en temps réel du champ titre (`#title`) dans le formulaire d’ajout de photo.
+ *
+ * Comportement :
+ * - Écoute les événements `input` et `blur` sur `#title`.
+ * - Si la valeur est vide, affiche (ou met à jour) un message d’erreur sous le conteneur
+ *   `#form-group-main` via `createErrorMessage(container, "error-message-title", "...")`.
+ * - Si la valeur n’est plus vide, supprime le message d’erreur s’il existe.
+ *
+ * Prérequis :
+ * - Le champ existe dans le DOM : `<input id="title">`.
+ * - Le conteneur d’injection existe : `<li id="form-group-main">…</li>`.
+ * - La fonction utilitaire `createErrorMessage` est disponible dans ce module.
+ *
+ * Effets de bord :
+ * - Ajoute/supprime un nœud `<p id="error-message-title" class="error-message">` dans le DOM.
+ * - Attache des écouteurs d’événements au champ `#title`.
+ *
+ * @function enableTitleValidation
+ * @returns {void} Ne retourne rien.
+ */
+export function enableTitleValidation() {
+  const titleInput = document.getElementById("title");
+  if (!titleInput) return;
+
+  const container = document.getElementById("form-group-main");
+  const errorID = "error-message-title";
+  
+  const validate = () => {
+    const value = titleInput.value.trim();
+
+    if (value.length === 0) {
+      const messageError = "Veuillez saisir un titre"
+      createErrorMessage(container, errorID, messageError);
+      return;
+    } else {
+      const existing = document.getElementById(errorID);
+      if (existing) existing.remove();
+    }
+  };
+
+  titleInput.addEventListener("input", validate);
+  titleInput.addEventListener("blur", validate);
 }
 
 

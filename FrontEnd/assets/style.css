@@ -504,7 +504,7 @@ footer .link-page {
 .form-group {
 	margin: 0 auto;
 }
-.form-group-header {
+#form-group-header {
 	height: 169px;
 	width: 420px;
 	background-color: var(--color-modal-group-header);
@@ -539,16 +539,25 @@ display: none;
 }
 
 /************* MODAL step-two Formulary ***********/
-.form-group-main {
+#form-group-main {
 	margin-bottom: 20px;
+	position: relative;
 }
-.form-group-main,
-.form-group-footer {
+#error-message-title {
+	position: absolute;
+	top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+	text-align: center;
+}
+
+#form-group-main,
+#form-group-footer {
 	display: flex;
 	flex-direction: column;
 	gap: 11.5px;
 }
-.form-group-footer {
+#form-group-footer {
 	position: relative;	
 }
 #error-message-category {
@@ -557,14 +566,14 @@ display: none;
   left: 50%;
   transform: translateX(-50%);
 }
-.form-group-main input,
+#form-group-main input,
 .select-wrapper {
 	border: none;
 	height: 51px;
 	box-shadow: 0px 4px 14px 0px #00000017;
 	position: relative;
 }
-.form-group-footer #category {
+#form-group-footer #category {
 	border: none;
 	cursor: pointer;
 	appearance: none;
@@ -603,8 +612,8 @@ display: none;
 	background-color: var(--color-title);
 }
 
-.form-group-main input[type="text"],
-.form-group-footer input[type="category"] {
+#form-group-main input[type="text"],
+#form-group-footer input[type="category"] {
 	padding-left: 18px;
 	font-size: 14px;
 	font-weight: 400;
