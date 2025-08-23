@@ -29,7 +29,7 @@
  * @property {{ name: string }} category
  */
 import { fetchData } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayGalleryError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack, enableUploadLabelTrigger, enableImagePreview, isSafeTitle, enableUploadFormValidation, enableTitleValidation } from "./scripts/dom.js";
+import { displayWorks, displayFilters, displayGalleryError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack, enableUploadLabelTrigger, enableImagePreview, isSafeTitle, enableImageValidation, enableTitleValidation, enableUploadFormValidation } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
 
@@ -70,6 +70,7 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
       enableUploadLabelTrigger();
       enableImagePreview();
       isSafeTitle();
+      enableImageValidation()
       enableTitleValidation()
       enableUploadFormValidation();
     }

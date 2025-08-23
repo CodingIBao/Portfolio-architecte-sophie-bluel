@@ -829,6 +829,9 @@ function resetImagePreview() {
   });
 
   formGroupHeader.append(icon, label, info);
+  
+  const errorImage = document.getElementById("error-message-image");
+  if (errorImage) errorImage.remove();
 }
 
 
@@ -1019,14 +1022,75 @@ export function enableTitleValidation() {
       const messageError = "Veuillez saisir un titre"
       createErrorMessage(container, errorID, messageError);
       return;
-    } else {
-      const existing = document.getElementById(errorID);
-      if (existing) existing.remove();
     }
+    const existing = document.getElementById(errorID);
+    if (existing) existing.remove();
   };
 
   titleInput.addEventListener("input", validate);
   titleInput.addEventListener("blur", validate);
+}
+
+
+/**
+ * Active la validation du champ image (input `#image`) dans l’étape d’upload de la modale.
+ *
+ * Comportement :
+ * - Considère le champ **valide** s’il existe déjà un aperçu `.preview-image` dans `#form-group-header`
+ *   **ou** si un fichier est sélectionné dans `#image` (`files.length > 0`).
+ * - Sinon, affiche (ou met à jour) un message d’erreur sous `#form-group-header`
+ *   via `createErrorMessage(container, "error-message-image", "Veuillez ajouter une image")`.
+ * - Supprime le message d’erreur dès que la condition de validité est remplie.
+ *
+ * Écouteurs :
+ * - Délégation `focusout` sur `#form-group-header` : si l’utilisateur quitte `.upload-label` sans avoir choisi d’image,
+ *   la validation est exécutée et le message apparaît.
+ *
+ * Anti double-binding :
+ * - Empêche l’attachement multiple des listeners grâce à `data-img-validation-bound` sur `#form-group-header`.
+ *
+ * Prérequis :
+ * - Les éléments existent dans le DOM : `#image`, `#form-group-header`, et une étiquette `.upload-label`.
+ * - La fonction utilitaire `createErrorMessage(container, id, message)` est disponible.
+ * - Le code d’aperçu ajoute bien l’image avec la classe `.preview-image` dans `#form-group-header`.
+ *
+ * Effets de bord :
+ * - Ajoute/supprime un nœud `<p id="error-message-image" class="error-message">` dans le DOM.
+ *
+ * @function enableImageValidation
+ * @returns {void} Ne retourne rien.
+ *
+ */
+export function enableImageValidation() {
+  const fileInput = document.getElementById("image");
+  const container = document.getElementById("form-group-header");
+  const errorID = "error-message-image";
+
+  if (!fileInput || !container) return;
+
+  if (container.dataset.imgValidationBound === "true") return;
+  container.dataset.imgValidationBound = "true";
+
+  const clearError = () => {
+    const existing = document.getElementById(errorID);
+    if (existing) existing.remove();
+  };
+  
+  const validate = () => {
+    const hasPreview = !!container.querySelector(".preview-image");
+    const hasFile = fileInput.files && fileInput.files.length > 0;
+
+    if (hasPreview || hasFile) {
+      clearError();
+      return;
+    }
+
+    createErrorMessage(container,errorID, "Veuillez ajouter une image");
+  };
+
+  container.addEventListener("focusout", (e) => {
+    if (e.target.closest(".upload-label")) validate();
+  });
 }
 
 
