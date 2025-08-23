@@ -437,6 +437,7 @@ export function exitModal() {
     if (stepTwoWasOpen) {
       resetImagePreview();
       resetTitleInput();
+      resetCategoryInput();
     }
   }
 
@@ -1091,6 +1092,74 @@ export function enableImageValidation() {
   container.addEventListener("focusout", (e) => {
     if (e.target.closest(".upload-label")) validate();
   });
+}
+
+
+/**
+ * Réinitialise le champ catégorie (#category) du formulaire d’ajout.
+ *
+ * - Remet la valeur du <select id="category"> à vide (option placeholder).
+ * - Supprime le message d’erreur éventuel (#error-message-category) s’il existe.
+ *
+ * @function resetCategoryInput
+ * @returns {void}
+ *
+ * @example
+ * // Lors de la fermeture de la modale (step-two) :
+ * resetCategoryInput();
+ */
+function resetCategoryInput() {
+  const categoryInput = document.getElementById("category");
+  if (categoryInput) {
+    categoryInput.value = "";
+  }
+  const errorMessage = document.getElementById("error-message-category");
+  if (errorMessage) errorMessage.remove();
+}
+
+
+/**
+ * Active la validation du champ catégorie (#category) dans le formulaire d’upload.
+ *
+ * Comportement :
+ * - Écoute les événements `change` et `blur` du <select id="category">.
+ * - Si aucune option n’est sélectionnée (valeur vide), affiche le message d’erreur
+ *   sous le conteneur #form-group-footer via createErrorMessage(...).
+ * - Si une valeur devient valide, supprime le message d’erreur.
+ *
+ * Prérequis :
+ * - Le <select id="category"> et le conteneur #form-group-footer existent dans le DOM.
+ * - La fonction utilitaire createErrorMessage(container, id, message) est disponible.
+ *
+ * Effets de bord :
+ * - Ajoute des écouteurs d’événements sur #category.
+ * - Crée/supprime le nœud <p id="error-message-category" class="error-message"> dans le DOM.
+ *
+ * @function enableCategoryValidation
+ * @returns {void}
+ *
+ */
+export function enableCategoryValidation() {
+  const categoryInput = document.getElementById("category");
+  if (!categoryInput) return;
+
+  const container = document.getElementById("form-group-footer");
+  const errorID = "error-message-category";
+  
+  const validate = () => {
+    const value = categoryInput.value.trim();
+
+    if (value.length === 0) {
+      const messageError = "Veuillez choisir une catégorie"
+      createErrorMessage(container, errorID, messageError);
+      return;
+    }
+    const existing = document.getElementById(errorID);
+    if (existing) existing.remove();
+  };
+
+  categoryInput.addEventListener("change", validate);
+  categoryInput.addEventListener("blur", validate);
 }
 
 

@@ -539,6 +539,18 @@ display: none;
 }
 
 /************* MODAL step-two Formulary ***********/
+#form-group-header {
+	margin-bottom: 20px;
+	position: relative;
+}
+#error-message-image {
+	position: absolute;
+	top: 104%;
+  left: 50%;
+  transform: translateX(-50%);
+	text-align: center;
+}
+
 #form-group-main {
 	margin-bottom: 20px;
 	position: relative;
@@ -562,7 +574,7 @@ display: none;
 }
 #error-message-category {
 	position: absolute;
-	top: 150%;
+	top: 110%;
   left: 50%;
   transform: translateX(-50%);
 }
