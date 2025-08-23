@@ -1,3 +1,5 @@
+// ./js/main.js
+
 /**
  * @module main
  * @description
@@ -5,30 +7,16 @@
  * active les comportements de la modale et synchronise les filtres/URL.
  *
  * Dépendances :
- * - `fetchData` (API HTTP)
- * - Fonctions DOM (`displayWorks`, `displayFilters`, etc.)
- * - Fonctions utilitaires (`isLogIn`, `slugify`, etc.)
+ * - `getWorks` (helpers API)
+ * - Fonctions DOM (`displayWorks`, `displayFilters`, `displayModal`, etc.)
+ * - Fonctions utilitaires (`isLogIn`, `slugify`, `getCategoryNameFromQueryParam`, etc.)
  *
  * Effets de bord :
  * - Mutations DOM (bannière admin, liens "Modifier", modale, galerie, filtres)
  * - Lecture du token (auth) via `isLogIn`
  * - Historique navigateur modifié (pushState) via les filtres
  */
-
-/**
- * @typedef {Object} Category
- * @property {number|string} id
- * @property {string} name
- */
-
-/**
- * @typedef {Object} Work
- * @property {number|string} id
- * @property {string} title
- * @property {string} imageUrl
- * @property {{ name: string }} category
- */
-import { fetchData } from "./scripts/api.js";
+import { getWorks } from "./scripts/api.js";
 import { displayWorks, displayFilters, displayGalleryError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack, enableUploadLabelTrigger, enableImagePreview, isSafeTitle, enableImageValidation, enableTitleValidation, enableCategoryValidation, enableUploadFormValidation } from "./scripts/dom.js";
 import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
 
@@ -38,9 +26,9 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
 /**
  * Initialise l’application :
  * 1) Vérifie l’authentification et applique l’UI admin si nécessaire
- * 2) Récupère les projets via l’API
- * 3) Affiche la modale (listeners), la galerie et les filtres
- * 4) Applique un filtrage initial selon l’URL (`?category=...`)
+ * 2) Récupère les projets via l’API (`getWorks`)
+ * 3) Monte la modale et les validations (si connecté)
+ * 4) Affiche la galerie + les filtres, puis applique un filtrage initial selon l’URL (`?category=...`)
  *
  * Gestion d’erreur :
  * - Log technique en console
@@ -48,14 +36,18 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
  *
  * @async
  * @function init
- * @returns {Promise<void>} Résout une fois l’UI prête
+ * @returns {Promise<void>} Résout une fois l’UI prête.
+ *
+ * @example
+ * // Chargement au démarrage de la page (IIFE)
+ * (async function init() { /* ... *\/ })();
  */
 (async function init() {
   try {
     const isAuth = isLogIn();
 
     /** @type {Work[]} */
-    const works = await fetchData("http://localhost:5678/api/works");
+    const works = await getWorks();
     
     if (isAuth) {
       addAdminBanner();

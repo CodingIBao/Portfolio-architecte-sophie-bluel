@@ -1,11 +1,11 @@
 import { slugify } from "./utils.js";
-import { fetchData } from "./api.js";
+import { getCategories, deleteWork } from "./api.js";
 
 /**
  * @module dom
  * @description
- * Utilitaires DOM pour l’affichage des projets et la gestion de l’UI (galerie, modale, erreurs, accessibilité).
- * Dépend de `fetchData` pour les appels API et de `slugify` pour les URLs/slug.
+ * Utilitaires DOM pour l’UI (galerie, modale, erreurs, accessibilité).
+ * Dépend des helpers API (`getCategories`, `deleteWork`) et de `slugify`.
  */
 
 /**
@@ -470,13 +470,17 @@ function createModalFigure(work) {
 
   const img = document.createElement("img");
   img.src = work.imageUrl;
+  img.alt = work.title || "Projet";
 
   const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
   deleteBtn.classList.add("delete-btn");
   deleteBtn.setAttribute("data-id", work.id);
+  deleteBtn.setAttribute("aria-label", `Supprimer « ${work.title || "ce projet"} »`)
 
   const trashIcon = document.createElement("i");
   trashIcon.className = "fa-solid fa-trash-can";
+  trashIcon.setAttribute("aria-hidden", "true");
 
   deleteBtn.appendChild(trashIcon);
   handleDeleteButton(deleteBtn);
@@ -528,10 +532,7 @@ export function handleDeleteButton(button) {
     const galleryFigure = document.querySelector(`.gallery figure[data-id="${workId}"]`);
 
     try {
-      await fetchData(`http://localhost:5678/api/works/${workId}`, "DELETE", {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      });
+      await deleteWork(workId, token);
 
       const old = document.getElementById("error-delete-project");
       if (old) old.remove();
@@ -608,6 +609,8 @@ export function enableUploadLabelTrigger() {
   const uploadLabel = document.querySelector(".upload-label");
   const uploadInput = document.getElementById("image");
 
+  if (!uploadLabel || !uploadInput) return;
+
   uploadLabel.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       uploadInput.click();
@@ -681,7 +684,7 @@ export async function populateCategorySelect() {
   const categorySelect = document.getElementById("category");
   
   try {
-    const categories = await fetchData("http://localhost:5678/api/categories");
+    const categories = await getCategories();
     const old = document.getElementById("error-message-category");
     if (old) old.remove();
     
@@ -731,16 +734,20 @@ function cleanFileName(fileName) {
 
 
 /**
- * Libère une URL temporaire créée avec `URL.createObjectURL` pour éviter les fuites mémoire.
- *
- * @function revokePreviewURL
- * @param {{ value: string|null }} urlRef - Objet contenant la référence actuelle de l'URL.
+ * Libère l'URL d'aperçu stockée sur l'input file (dataset.previewURL).
+ * @param {HTMLInputElement} input
  * @returns {void}
  *
  * @example
- * const objectURLRef = { value: URL.createObjectURL(file) };
- * revokePreviewURL(objectURLRef);
- * // Libère l'URL et remet objectURLRef.value à null
+ * // Création (au moment de la prévisualisation)
+ * const fileInput = document.getElementById("image");
+ * const file = fileInput.files?.[0];
+ * if (file) {
+ *   fileInput.dataset.previewURL = URL.createObjectURL(file);
+ * }
+ *
+ * // ... plus tard (reset / fermeture de modale) :
+ * revokePreviewURLFromInput(fileInput);
  */
 function revokePreviewURLFromInput(input) {
   const url = input?.dataset?.previewURL;
@@ -951,6 +958,7 @@ export function isSafeTitle() {
 
   titleInput.addEventListener("input", () => {
     const cleaned = sanitize(titleInput.value);
+
     if (cleaned !== titleInput.value) {
       titleInput.value = cleaned;
     }
@@ -980,9 +988,11 @@ export function isSafeTitle() {
  */
 function resetTitleInput() {
   const titleInput = document.getElementById("title");
+
   if (titleInput) {
     titleInput.value = "";
   }
+
   const errorMessage = document.getElementById("error-message-title");
   if (errorMessage) errorMessage.remove();
 }
@@ -1110,9 +1120,11 @@ export function enableImageValidation() {
  */
 function resetCategoryInput() {
   const categoryInput = document.getElementById("category");
+
   if (categoryInput) {
     categoryInput.value = "";
   }
+
   const errorMessage = document.getElementById("error-message-category");
   if (errorMessage) errorMessage.remove();
 }
@@ -1147,13 +1159,11 @@ export function enableCategoryValidation() {
   const errorID = "error-message-category";
   
   const validate = () => {
-    const value = categoryInput.value.trim();
-
-    if (value.length === 0) {
-      const messageError = "Veuillez choisir une catégorie"
-      createErrorMessage(container, errorID, messageError);
+    if (categoryInput.value === "") {
+      createErrorMessage(container, errorID, "Veuillez choisir une catégorie");
       return;
     }
+
     const existing = document.getElementById(errorID);
     if (existing) existing.remove();
   };
@@ -1199,7 +1209,9 @@ export function enableUploadFormValidation() {
   const fileInput = document.getElementById("image");
   const titleInput = document.getElementById("title");
   const categorySelect = document.getElementById("category");
-  const submitBtn = document.querySelector(".btn-form-validate");
+  const submitBtn = form?.querySelector(".btn-form-validate");
+
+  if (!form || !fileInput || !titleInput || !categorySelect || !submitBtn) return;
 
   const updateState = () => {
     const isValid =

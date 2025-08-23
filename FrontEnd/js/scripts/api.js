@@ -1,28 +1,97 @@
+
+// ./js/scripts/api.js
+
 /**
- * Exécute une requête HTTP (GET/POST/PUT/DELETE/PATCH) avec gestion d’erreurs.
+ * URL de base de l'API backend.
+ * Ajustez-la selon l'environnement (local, préprod, prod).
+ * @type {string}
+ * 
+ */
+export const baseURL = "http://localhost:5678/api";
+
+
+/**
+ * Récupère la liste complète des projets (works).
  *
- * - Sérialise automatiquement `body` en JSON si fourni.
+ * @function getWorks
+ * @returns {Promise<Array<{id:number|string, title:string, imageUrl:string, category:{name:string}}>>}
+ *
+ */
+export async function getWorks() {
+  return fetchData(`${baseURL}/works`);
+}
+
+
+/**
+ * Récupère la liste des catégories disponibles.
+ *
+ * @function getCategories
+ * @returns {Promise<Array<{id:number|string, name:string}>>}
+ *
+ */
+export async function getCategories() {
+  return fetchData(`${baseURL}/categories`);
+}
+
+
+/**
+ * Supprime un projet par son identifiant.
+ *
+ * @function deleteWork
+ * @param {number|string} id - Identifiant du projet à supprimer.
+ * @param {string} token - Jeton JWT (format: Bearer <token>) pour l'authentification.
+ * @returns {Promise<void|undefined>} Retourne `undefined` si l'API répond 204 No Content.
+ *
+ * @throws {Error} Si la réponse HTTP n'est pas OK (4xx/5xx).
+ *
+ */
+export async function deleteWork(id, token) {
+  return fetchData(`${baseURL}/works/${id}`, "DELETE", {
+    "Authorization": `Bearer ${token}`,
+  });
+}
+
+
+/**
+ * Authentifie l'utilisateur et renvoie le jeton JWT.
+ *
+ * @function loginUser
+ * @param {string} email - Adresse e-mail de l'utilisateur.
+ * @param {string} password - Mot de passe.
+ * @returns {Promise<{ token: string }>} Objet contenant le jeton d'authentification.
+ *
+ * @throws {Error} Si l'email/mot de passe est invalide ou en cas d'erreur réseau.
+ *
+ */
+export async function loginUser(email, password) {
+  return fetchData(`${baseURL}/users/login`, "POST", {
+    "Content-Type": "application/json",
+  }, { email, password});
+}
+
+
+/**
+ * Exécute une requête HTTP générique (GET/POST/PUT/DELETE/PATCH) avec gestion d’erreurs.
+ *
+ * Comportement :
+ * - Sérialise automatiquement `body` en JSON si fourni (⚠️ pour `FormData`, ne pas passer par `body` ici sans adapter).
  * - Lève une erreur explicite si `response.ok` est `false` (statuts non 2xx).
- * - Retourne le JSON parsé, ou `undefined` pour les réponses `204 No Content`.
+ * - Retourne le JSON parsé, ou `undefined` si la réponse est `204 No Content`.
  *
  * @async
  * @template T
  * @param {string} url - URL de la ressource à interroger.
  * @param {"GET"|"POST"|"PUT"|"DELETE"|"PATCH"} [method="GET"] - Méthode HTTP.
  * @param {Record<string, string>} [headers={}] - En-têtes HTTP à inclure.
- * @param {unknown} [body=null] - Corps de la requête (sera `JSON.stringify` si non nul).
+ * @param {unknown} [body=null] - Corps de la requête (sera `JSON.stringify` s'il est non nul).
  * @returns {Promise<T|undefined>} Données JSON parsées (`T`) ou `undefined` si 204.
  *
  * @throws {Error} En cas d’erreur réseau ou de statut HTTP non 2xx.
- * Le `message` de l’erreur a la forme `"${status} - ${message lisible}"`.
+ * Le message d’erreur est de la forme `"<status> - <message lisible>"`.
  *
  * @example
  * // GET simple
  * const works = await fetchData("http://localhost:5678/api/works");
- *
- * @example
- * // (Astuce) Typage dans TON code, pas ici dans la JSDoc :
- * // const works = /** @type {import("./types").Work[]} *\/ (await fetchData("http://localhost:5678/api/works"));
  *
  * @example
  * // POST JSON
@@ -33,7 +102,7 @@
  *
  * @example
  * // DELETE (réponse 204 -> retourne undefined)
- * await fetchData(`http://localhost:5678/api/works/${id}`, "DELETE", {
+ * await fetchData(`http://localhost:5678/api/works/123`, "DELETE", {
  *   "Authorization": `Bearer ${token}`
  * });
  */

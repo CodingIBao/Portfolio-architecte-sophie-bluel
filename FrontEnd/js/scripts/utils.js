@@ -27,6 +27,7 @@ export function getUniqueCategories(works) {
 
   const uniqueCategories = allCategories.filter(category => {
     const isDuplicate = uniqueCategoryIds.has(category.id);
+
     uniqueCategoryIds.add(category.id);
     return !isDuplicate;
   });
@@ -50,6 +51,7 @@ export function getUniqueCategories(works) {
 export function getCategoryNameFromQueryParam () {
   const params = new URLSearchParams(window.location.search);
   const selectedCategory = params.get("category");
+
   return (!selectedCategory || selectedCategory === "all") ? null : selectedCategory.toLowerCase();
 }
 
@@ -109,9 +111,14 @@ export function isLogIn() {
  * logOut(isLogIn());
  */
 export function logOut(isAuth) {
-  const logOut = document.getElementById("link-login");
-  if (!logOut || !isAuth) return;
-  logOut.addEventListener("click", (e)=> {
+  const logoutLink = document.getElementById("link-login");
+
+  if (!logoutLink || !isAuth) return;
+
+  if (logoutLink.dataset.bound === "true") return;
+  logoutLink.dataset.bound = "true";
+
+  logoutLink.addEventListener("click", (e)=> {
     e.preventDefault();
     localStorage.removeItem("token");
     window.location.replace("./login.html");
