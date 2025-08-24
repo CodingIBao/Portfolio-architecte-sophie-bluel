@@ -788,6 +788,63 @@ function attachImageClickToFileInput(fileInput, imageElement) {
 
 
 /**
+ * Active la prévisualisation interactive d'une image sélectionnée dans un `<input type="file">`.
+*
+* Fonctionnalités :
+* - Vide le contenu existant du conteneur `.form-group-header`
+* - Affiche une balise `<img>` avec l'aperçu du fichier sélectionné
+* - Génère dynamiquement l'attribut `alt` en nettoyant le nom du fichier (`cleanFileName`)
+* - Applique la classe `.preview-image` pour le style
+* - Rend l'image cliquable et focusable pour permettre de re-sélectionner un fichier
+*   (via clic souris ou touche `Enter`)
+* - Gère la libération de l'URL temporaire (via `revokePreviewURL`) pour éviter les fuites mémoire
+*
+* @function enableImagePreview
+* @returns {void}
+*
+* @example
+* // HTML :
+* // <div class="form-group-header">
+* //   <i class="fa-regular fa-image icon-placeholder"></i>
+* //   <label for="image" class="upload-label">+ ajouter photo</label>
+* //   <span class="upload-info">jpg, png 4mo max</span>
+* // </div>
+* // <input type="file" id="image" accept="image/*" />
+*
+* enableImagePreview();
+* // Après sélection, `.form-group-header` contient :
+* // <img src="blob:..." alt="Prévisualisation de l'image mon-fichier" class="preview-image">
+*/
+export function enableImagePreview() {
+  const fileInput = document.getElementById("image");
+  const formGroupHeader = document.getElementById("form-group-header");
+  
+  fileInput.addEventListener("change", () => {
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    
+    const file = fileInput.files[0];
+    
+    revokePreviewURLFromInput(fileInput);
+    
+    const objectURL = URL.createObjectURL(file);
+    fileInput.dataset.previewURL = objectURL;
+    
+    formGroupHeader.innerHTML = "";
+    
+    const previewImage = document.createElement("img");
+    previewImage.src = objectURL;
+    previewImage.alt = `Prévisualisation de l'image ${cleanFileName(file.name)}`;
+    previewImage.classList.add("preview-image");
+    
+    attachImageClickToFileInput(fileInput, previewImage);
+    
+    formGroupHeader.append(fileInput, previewImage);
+    previewImage.focus()
+  });
+}
+
+
+/**
  * Réinitialise l’UI d’upload de la modale (step-two) en remettant le placeholder.
  *
  * - Vide la valeur de l’input file `#image` (supprime la sélection en cours)
@@ -844,58 +901,64 @@ function resetImagePreview() {
 
 
 /**
- * Active la prévisualisation interactive d'une image sélectionnée dans un `<input type="file">`.
- *
- * Fonctionnalités :
- * - Vide le contenu existant du conteneur `.form-group-header`
- * - Affiche une balise `<img>` avec l'aperçu du fichier sélectionné
- * - Génère dynamiquement l'attribut `alt` en nettoyant le nom du fichier (`cleanFileName`)
- * - Applique la classe `.preview-image` pour le style
- * - Rend l'image cliquable et focusable pour permettre de re-sélectionner un fichier
- *   (via clic souris ou touche `Enter`)
- * - Gère la libération de l'URL temporaire (via `revokePreviewURL`) pour éviter les fuites mémoire
- *
- * @function enableImagePreview
- * @returns {void}
- *
- * @example
- * // HTML :
- * // <div class="form-group-header">
- * //   <i class="fa-regular fa-image icon-placeholder"></i>
- * //   <label for="image" class="upload-label">+ ajouter photo</label>
- * //   <span class="upload-info">jpg, png 4mo max</span>
- * // </div>
- * // <input type="file" id="image" accept="image/*" />
- *
- * enableImagePreview();
- * // Après sélection, `.form-group-header` contient :
- * // <img src="blob:..." alt="Prévisualisation de l'image mon-fichier" class="preview-image">
- */
-export function enableImagePreview() {
+ * Active la validation du champ image (input `#image`) dans l’étape d’upload de la modale.
+*
+* Comportement :
+* - Considère le champ **valide** s’il existe déjà un aperçu `.preview-image` dans `#form-group-header`
+*   **ou** si un fichier est sélectionné dans `#image` (`files.length > 0`).
+* - Sinon, affiche (ou met à jour) un message d’erreur sous `#form-group-header`
+*   via `createErrorMessage(container, "error-message-image", "Veuillez ajouter une image")`.
+* - Supprime le message d’erreur dès que la condition de validité est remplie.
+*
+* Écouteurs :
+* - Délégation `focusout` sur `#form-group-header` : si l’utilisateur quitte `.upload-label` sans avoir choisi d’image,
+*   la validation est exécutée et le message apparaît.
+*
+* Anti double-binding :
+* - Empêche l’attachement multiple des listeners grâce à `data-img-validation-bound` sur `#form-group-header`.
+*
+* Prérequis :
+* - Les éléments existent dans le DOM : `#image`, `#form-group-header`, et une étiquette `.upload-label`.
+* - La fonction utilitaire `createErrorMessage(container, id, message)` est disponible.
+* - Le code d’aperçu ajoute bien l’image avec la classe `.preview-image` dans `#form-group-header`.
+*
+* Effets de bord :
+* - Ajoute/supprime un nœud `<p id="error-message-image" class="error-message">` dans le DOM.
+*
+* @function enableImageValidation
+* @returns {void} Ne retourne rien.
+*
+*/
+export function enableImageValidation() {
   const fileInput = document.getElementById("image");
-  const formGroupHeader = document.getElementById("form-group-header");
-
-  fileInput.addEventListener("change", () => {
-    if (!fileInput.files || fileInput.files.length === 0) return;
-
-    const file = fileInput.files[0];
-
-    revokePreviewURLFromInput(fileInput);
-
-    const objectURL = URL.createObjectURL(file);
-    fileInput.dataset.previewURL = objectURL;
-
-    formGroupHeader.innerHTML = "";
-
-    const previewImage = document.createElement("img");
-    previewImage.src = objectURL;
-    previewImage.alt = `Prévisualisation de l'image ${cleanFileName(file.name)}`;
-    previewImage.classList.add("preview-image");
-
-    attachImageClickToFileInput(fileInput, previewImage);
+  const container = document.getElementById("form-group-header");
+  const errorID = "error-message-image";
+  
+  if (!fileInput || !container) return;
+  
+  if (container.dataset.imgValidationBound === "true") return;
+  
+  container.dataset.imgValidationBound = "true";
+  
+  const clearError = () => {
+    const existing = document.getElementById(errorID);
+    if (existing) existing.remove();
+  };
+  
+  const validate = () => {
+    const hasPreview = !!container.querySelector(".preview-image");
+    const hasFile = fileInput.files && fileInput.files.length > 0;
     
-    formGroupHeader.append(fileInput, previewImage);
-    previewImage.focus()
+    if (hasPreview || hasFile) {
+      clearError();
+      return;
+    }
+    
+    createErrorMessage(container,errorID, "Veuillez ajouter une image");
+  };
+  
+  container.addEventListener("focusout", (e) => {
+    if (e.target.closest(".upload-label")) validate();
   });
 }
 
@@ -965,6 +1028,65 @@ export function isSafeTitle() {
   });
 }
 
+
+/**
+ * Active la validation en temps réel du champ titre (`#title`) dans le formulaire d’ajout de photo.
+*
+* Comportement :
+* - Écoute les événements `input` et `blur` sur `#title`.
+* - Si la valeur est vide, affiche (ou met à jour) un message d’erreur sous le conteneur
+*   `#form-group-main` via `createErrorMessage(container, "error-message-title", "...")`.
+* - Si la valeur n’est plus vide, supprime le message d’erreur s’il existe.
+*
+* Prérequis :
+* - Le champ existe dans le DOM : `<input id="title">`.
+* - Le conteneur d’injection existe : `<li id="form-group-main">…</li>`.
+* - La fonction utilitaire `createErrorMessage` est disponible dans ce module.
+*
+* Effets de bord :
+* - Ajoute/supprime un nœud `<p id="error-message-title" class="error-message">` dans le DOM.
+* - Attache des écouteurs d’événements au champ `#title`.
+*
+* @function enableTitleValidation
+* @returns {void} Ne retourne rien.
+*/
+export function enableTitleValidation() {
+  const titleInput = document.getElementById("title");
+  if (!titleInput) return;
+  
+  const container = document.getElementById("form-group-main");
+  const errorID = "error-message-title";
+  
+  const clearError = () => {
+    const existing = document.getElementById(errorID);
+    if (existing) existing.remove();
+  };
+  
+  const isTouched = () => titleInput.dataset.touched === "true";
+  const markTouched = () => {titleInput.dataset.touched = "true";};
+  
+  const validate = () => {
+    const value = titleInput.value.trim();
+    
+    if (value.length === 0) {
+      
+      if (isTouched()) {
+        createErrorMessage(container, errorID, "Veuillez saisir un titre");
+      } else {
+        clearError();
+      }
+      return;
+    }
+    
+    clearError();
+  };
+  
+  titleInput.addEventListener("focus", markTouched);
+  titleInput.addEventListener("input", () => { markTouched(); validate(); });
+  titleInput.addEventListener("blur", validate);
+}
+
+
 /**
  * Réinitialise le champ titre (#title) du formulaire d’ajout de projet.
  *
@@ -991,6 +1113,7 @@ function resetTitleInput() {
 
   if (titleInput) {
     titleInput.value = "";
+    titleInput.dataset.touched = "false";
   }
 
   const errorMessage = document.getElementById("error-message-title");
@@ -999,109 +1122,45 @@ function resetTitleInput() {
 
 
 /**
- * Active la validation en temps réel du champ titre (`#title`) dans le formulaire d’ajout de photo.
- *
- * Comportement :
- * - Écoute les événements `input` et `blur` sur `#title`.
- * - Si la valeur est vide, affiche (ou met à jour) un message d’erreur sous le conteneur
- *   `#form-group-main` via `createErrorMessage(container, "error-message-title", "...")`.
- * - Si la valeur n’est plus vide, supprime le message d’erreur s’il existe.
- *
- * Prérequis :
- * - Le champ existe dans le DOM : `<input id="title">`.
- * - Le conteneur d’injection existe : `<li id="form-group-main">…</li>`.
- * - La fonction utilitaire `createErrorMessage` est disponible dans ce module.
- *
- * Effets de bord :
- * - Ajoute/supprime un nœud `<p id="error-message-title" class="error-message">` dans le DOM.
- * - Attache des écouteurs d’événements au champ `#title`.
- *
- * @function enableTitleValidation
- * @returns {void} Ne retourne rien.
- */
-export function enableTitleValidation() {
-  const titleInput = document.getElementById("title");
-  if (!titleInput) return;
-
-  const container = document.getElementById("form-group-main");
-  const errorID = "error-message-title";
+ * Active la validation du champ catégorie (#category) dans le formulaire d’upload.
+*
+* Comportement :
+* - Écoute les événements `change` et `blur` du <select id="category">.
+* - Si aucune option n’est sélectionnée (valeur vide), affiche le message d’erreur
+*   sous le conteneur #form-group-footer via createErrorMessage(...).
+* - Si une valeur devient valide, supprime le message d’erreur.
+*
+* Prérequis :
+* - Le <select id="category"> et le conteneur #form-group-footer existent dans le DOM.
+* - La fonction utilitaire createErrorMessage(container, id, message) est disponible.
+*
+* Effets de bord :
+* - Ajoute des écouteurs d’événements sur #category.
+* - Crée/supprime le nœud <p id="error-message-category" class="error-message"> dans le DOM.
+*
+* @function enableCategoryValidation
+* @returns {void}
+*
+*/
+export function enableCategoryValidation() {
+  const categoryInput = document.getElementById("category");
+  if (!categoryInput) return;
+  
+  const container = document.getElementById("form-group-footer");
+  const errorID = "error-message-category";
   
   const validate = () => {
-    const value = titleInput.value.trim();
-
-    if (value.length === 0) {
-      const messageError = "Veuillez saisir un titre"
-      createErrorMessage(container, errorID, messageError);
+    if (categoryInput.value === "") {
+      createErrorMessage(container, errorID, "Veuillez choisir une catégorie");
       return;
     }
-    const existing = document.getElementById(errorID);
-    if (existing) existing.remove();
-  };
-
-  titleInput.addEventListener("input", validate);
-  titleInput.addEventListener("blur", validate);
-}
-
-
-/**
- * Active la validation du champ image (input `#image`) dans l’étape d’upload de la modale.
- *
- * Comportement :
- * - Considère le champ **valide** s’il existe déjà un aperçu `.preview-image` dans `#form-group-header`
- *   **ou** si un fichier est sélectionné dans `#image` (`files.length > 0`).
- * - Sinon, affiche (ou met à jour) un message d’erreur sous `#form-group-header`
- *   via `createErrorMessage(container, "error-message-image", "Veuillez ajouter une image")`.
- * - Supprime le message d’erreur dès que la condition de validité est remplie.
- *
- * Écouteurs :
- * - Délégation `focusout` sur `#form-group-header` : si l’utilisateur quitte `.upload-label` sans avoir choisi d’image,
- *   la validation est exécutée et le message apparaît.
- *
- * Anti double-binding :
- * - Empêche l’attachement multiple des listeners grâce à `data-img-validation-bound` sur `#form-group-header`.
- *
- * Prérequis :
- * - Les éléments existent dans le DOM : `#image`, `#form-group-header`, et une étiquette `.upload-label`.
- * - La fonction utilitaire `createErrorMessage(container, id, message)` est disponible.
- * - Le code d’aperçu ajoute bien l’image avec la classe `.preview-image` dans `#form-group-header`.
- *
- * Effets de bord :
- * - Ajoute/supprime un nœud `<p id="error-message-image" class="error-message">` dans le DOM.
- *
- * @function enableImageValidation
- * @returns {void} Ne retourne rien.
- *
- */
-export function enableImageValidation() {
-  const fileInput = document.getElementById("image");
-  const container = document.getElementById("form-group-header");
-  const errorID = "error-message-image";
-
-  if (!fileInput || !container) return;
-
-  if (container.dataset.imgValidationBound === "true") return;
-  container.dataset.imgValidationBound = "true";
-
-  const clearError = () => {
+    
     const existing = document.getElementById(errorID);
     if (existing) existing.remove();
   };
   
-  const validate = () => {
-    const hasPreview = !!container.querySelector(".preview-image");
-    const hasFile = fileInput.files && fileInput.files.length > 0;
-
-    if (hasPreview || hasFile) {
-      clearError();
-      return;
-    }
-
-    createErrorMessage(container,errorID, "Veuillez ajouter une image");
-  };
-
-  container.addEventListener("focusout", (e) => {
-    if (e.target.closest(".upload-label")) validate();
-  });
+  categoryInput.addEventListener("change", validate);
+  categoryInput.addEventListener("blur", validate);
 }
 
 
@@ -1131,53 +1190,10 @@ function resetCategoryInput() {
 
 
 /**
- * Active la validation du champ catégorie (#category) dans le formulaire d’upload.
- *
- * Comportement :
- * - Écoute les événements `change` et `blur` du <select id="category">.
- * - Si aucune option n’est sélectionnée (valeur vide), affiche le message d’erreur
- *   sous le conteneur #form-group-footer via createErrorMessage(...).
- * - Si une valeur devient valide, supprime le message d’erreur.
- *
- * Prérequis :
- * - Le <select id="category"> et le conteneur #form-group-footer existent dans le DOM.
- * - La fonction utilitaire createErrorMessage(container, id, message) est disponible.
- *
- * Effets de bord :
- * - Ajoute des écouteurs d’événements sur #category.
- * - Crée/supprime le nœud <p id="error-message-category" class="error-message"> dans le DOM.
- *
- * @function enableCategoryValidation
- * @returns {void}
- *
- */
-export function enableCategoryValidation() {
-  const categoryInput = document.getElementById("category");
-  if (!categoryInput) return;
-
-  const container = document.getElementById("form-group-footer");
-  const errorID = "error-message-category";
-  
-  const validate = () => {
-    if (categoryInput.value === "") {
-      createErrorMessage(container, errorID, "Veuillez choisir une catégorie");
-      return;
-    }
-
-    const existing = document.getElementById(errorID);
-    if (existing) existing.remove();
-  };
-
-  categoryInput.addEventListener("change", validate);
-  categoryInput.addEventListener("blur", validate);
-}
-
-
-/**
  * Active une validation en temps réel du formulaire d’upload (step-two).
- *
- * Fonctionnalités :
- * - Vérifie si les 3 champs obligatoires sont remplis :
+*
+* Fonctionnalités :
+* - Vérifie si les 3 champs obligatoires sont remplis :
  *   - un fichier sélectionné dans `#image`
  *   - un titre non vide dans `#title` (espaces ignorés)
  *   - une catégorie choisie dans `#category`

@@ -177,6 +177,7 @@ main {
 	max-width: 952px;
 	margin: auto;
 	position: relative;
+	scroll-margin-top: 60px;
 }
 #error-display-gallery {
 	position: absolute;
