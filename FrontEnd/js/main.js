@@ -3,35 +3,75 @@
 /**
  * @module main
  * @description
- * Point d’entrée de l’application. Prépare l’UI, charge les données distantes,
- * active les comportements de la modale et synchronise les filtres/URL.
- *
- * Dépendances :
- * - `getWorks` (helpers API)
- * - Fonctions DOM (`displayWorks`, `displayFilters`, `displayModal`, etc.)
- * - Fonctions utilitaires (`isLogIn`, `slugify`, `getCategoryNameFromQueryParam`, etc.)
+ * Point d’entrée de l’application.
+ * - Prépare l’UI
+ * - Charge les données distantes
+ * - Active la modale (si authentifié)
+ * - Synchronise les filtres/URL
  *
  * Effets de bord :
  * - Mutations DOM (bannière admin, liens "Modifier", modale, galerie, filtres)
- * - Lecture du token (auth) via `isLogIn`
- * - Historique navigateur modifié (pushState) via les filtres
+ * - Lecture/écriture du token (auth) via `localStorage`
+ * - Historique navigateur modifié (`pushState`) via les filtres
+ *
+ * Événements écoutés :
+ * - `work:created` (après upload, pour MAJ galerie/filtre courant)
+ * - `work:deleted` (après suppression, pour MAJ galerie/filtre courant)
  */
-import { getWorks } from "./scripts/api.js";
-import { displayWorks, displayFilters, displayGalleryError, domModificationLogIn, addAdminBanner, addEditLink, displayModal, exitModal, displayModalGallery, displayModalAddPhoto, handleModalBack, enableUploadLabelTrigger, enableImagePreview, isSafeTitle, enableImageValidation, enableTitleValidation, enableCategoryValidation, enableUploadFormValidation } from "./scripts/dom.js";
-import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, slugify } from "./scripts/utils.js";
+import {
+  getWorks
+} from "./scripts/api.js";
+
+import {
+  displayWorks,
+  displayFilters,
+  displayGalleryError,
+  domModificationLogIn,
+  addAdminBanner,
+  addEditLink,
+  displayModal,
+  exitModal,
+  displayModalGallery,
+  mountModalNavigation,
+  mountImageField,
+  mountTitleField,
+  enableCategoryValidation,
+  enableUploadFormValidation,
+  handleUploadSubmit
+} from "./scripts/dom.js";
+
+import {
+  getCategoryNameFromQueryParam,
+  getUniqueCategories,
+  isLogIn,
+  logOut,
+  slugify,
+  UI_ERROR_MSG
+} from "./scripts/utils.js";
 
 
+/**
+ * Ré-affiche la galerie selon le slug courant dans l’URL.
+ * @param {Work[]} works
+ */
+function renderByCurrentFilter(works) {
+  const slug = getCategoryNameFromQueryParam();
+  const list = slug && slug !== "all"
+    ? works.filter(w => slugify(w.category?.name || "") === slug)
+    : works;
+  displayWorks(list);
+}
 
 
 /**
  * Initialise l’application :
  * 1) Vérifie l’authentification et applique l’UI admin si nécessaire
  * 2) Récupère les projets via l’API (`getWorks`)
- * 3) Monte la modale et les validations (si connecté)
- * 4) Affiche la galerie + les filtres, puis applique un filtrage initial selon l’URL (`?category=...`)
+ * 3) Monte la modale + validations si connecté
+ * 4) Affiche la galerie + les filtres, puis applique le filtre issu de l’URL (`?category=...`)
  *
  * Gestion d’erreur :
- * - Log technique en console
+ * - Log technique en console (pour les devs)
  * - Message utilisateur dans la section portfolio via `displayGalleryError`
  *
  * @async
@@ -39,46 +79,72 @@ import { getCategoryNameFromQueryParam, getUniqueCategories, isLogIn, logOut, sl
  * @returns {Promise<void>} Résout une fois l’UI prête.
  *
  * @example
- * // Chargement au démarrage de la page (IIFE)
- * (async function init() { /* ... *\/ })();
+ * // Chargement automatique au démarrage de la page
+ * (async function init() {})();
  */
 (async function init() {
   try {
     const isAuth = isLogIn();
 
+    const fetched = await getWorks();
     /** @type {Work[]} */
-    const works = await getWorks();
+    const works = Array.isArray(fetched) ? fetched : [];
     
     if (isAuth) {
       addAdminBanner();
       addEditLink();
       logOut(isAuth);
       domModificationLogIn(isAuth);
+
+      //modal
       displayModal();
       exitModal();
       displayModalGallery(works);
-      displayModalAddPhoto();
-      handleModalBack();
-      enableUploadLabelTrigger();
-      enableImagePreview();
-      isSafeTitle();
-      enableImageValidation();
-      enableTitleValidation();
+      mountModalNavigation();
+      mountImageField();
+      mountTitleField();
       enableCategoryValidation();
       enableUploadFormValidation();
+      handleUploadSubmit();
     }
-
-    const categorySlug = getCategoryNameFromQueryParam();
-    const filteredWorks = categorySlug
-      ? works.filter(work => slugify(work.category.name) === categorySlug)
-      : works;
 
     /** @type {Category[]} */
     const uniqueCategories = getUniqueCategories(works);
     displayFilters(uniqueCategories, works);
-    displayWorks(filteredWorks);
+
+    /**
+     * @event document#work:created
+     * @type {CustomEvent<Work>}
+     * @property {Work} detail - Nouveau projet créé
+     * @listens document#work:created
+     */
+    document.addEventListener("work:created", (e) => {
+      if (!e?.detail) return;
+      const newWork = e.detail;   
+      works.push(newWork);
+      
+      renderByCurrentFilter(works)
+    });
+
+    /**
+     * @event document#work:deleted
+     * @type {CustomEvent<{id:number}>}
+     * @property {number} detail.id - Identifiant du projet supprimé
+     * @listens document#work:deleted
+     */
+    document.addEventListener("work:deleted", (e) => {
+      const deletedId = Number(e.detail?.id);   
+      const idx = works.findIndex(w => Number(w.id) === deletedId);
+      if (idx !== -1) works.splice(idx, 1);
+
+      renderByCurrentFilter(works)
+    });
+
+    window.addEventListener("popstate", () => {
+      renderByCurrentFilter(works);
+    });
+
   } catch (error) {
-    console.error("[main.js]", error.message);
-    displayGalleryError("Impossible de charger les projets. Veuillez réessayer plus tard.");
+    displayGalleryError();
   }
 })();

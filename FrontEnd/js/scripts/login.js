@@ -1,41 +1,55 @@
+// ./js/script/login.js
+
 import { loginUser } from "./api.js";
-import { logOut, isLogIn } from "./utils.js";
+import { logOut, isLogIn, UI_ERROR_MSG } from "./utils.js";
 import { domModificationLogIn } from "./dom.js";
 
 /**
  * @file login.js
- * Gère la logique de connexion utilisateur depuis la page de login.
+ * @description Gestion du formulaire de connexion.
  *
- * Ce module :
- * - Nettoie et valide les données saisies
- * - Intercepte la soumission du formulaire de connexion
- * - Envoie une requête POST à l’API pour authentifier l’utilisateur
- * - Stocke le token JWT dans le localStorage si la connexion est réussie
- * - Redirige l’utilisateur vers la page d’accueil (index.html)
- * - Affiche un message d’erreur dans le DOM si la connexion échoue
+ * - Valide l’email et la présence du mot de passe.
+ * - Appelle `loginUser`, stocke le JWT (`localStorage.token`) et redirige vers `index.html`.
+ * - Affiche l’erreur dans `#login-error` (role="alert", aria-live="assertive").
+ * - Initialise l’UI header via `logOut` / `domModificationLogIn`.
+ *
+ * @listens submit (#login-form)
+ * @see loginUser (api.js)
+ * @throws {Error} Si `#login-form` est introuvable.
  */
-document.getElementById("login-form").addEventListener("submit", async (e) => {
+const form = document.getElementById("login-form");
+if (!form) throw new Error("Form #login-form introuvable");
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const errorElement = document.getElementById("login-error");
-  errorElement.textContent = "";
+  if (errorElement) {
+    errorElement.textContent = "";
+    errorElement.setAttribute("role", "alert");
+    errorElement.setAttribute("aria-live", "assertive");
+  }
 
   const submitBtn = e.currentTarget.querySelector(`input[type="submit"]`);
-  submitBtn.disabled = true;
+  if (submitBtn) submitBtn.disabled = true;
 
-  let email = document.getElementById("email").value.trim().toLowerCase();
-  let password = document.getElementById("password").value.trim();
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput.value;
 
   if (!email || !password) {
-    errorElement.textContent = "Veuillez remplir tous les champs.";
-    submitBtn.disabled = false;
+    if (errorElement) errorElement.textContent = UI_ERROR_MSG.form;
+    (email ? passwordInput : emailInput).focus();
+    if (submitBtn) submitBtn.disabled = false;
     return;
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    errorElement.textContent = "Adresse email invalide.";
-    submitBtn.disabled = false;
+    if (errorElement) errorElement.textContent = UI_ERROR_MSG.email;
+    emailInput.focus();
+    emailInput.select?.();
+    if (submitBtn) submitBtn.disabled = false;
     return;
   }
 
@@ -43,12 +57,19 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     const data = await loginUser(email, password);
 
     localStorage.setItem("token", data.token);
-    window.location.href = "index.html";
+    window.location.replace("index.html");
 
   } catch (error) {
-    errorElement.textContent = "Identifiants incorrects. Veuillez réessayer.";
+    if (!errorElement) return;
+    let msg = "";
+    if (error?.status === 401 || error?.status === 400) {
+      msg = UI_ERROR_MSG.login;
+    } else {
+      msg = UI_ERROR_MSG.generic;
+    }
+    errorElement.textContent = msg;
   } finally {
-    submitBtn.disabled = false;
+    if (submitBtn) submitBtn.disabled = false;
   }
 });
 

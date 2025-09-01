@@ -1,11 +1,8 @@
 
 // ./js/scripts/api.js
 
-/**
- * URL de base de l'API backend.
- * Ajustez-la selon l'environnement (local, préprod, prod).
+/** URL de base de l'API.
  * @type {string}
- * 
  */
 export const baseURL = "http://localhost:5678/api";
 
@@ -15,7 +12,7 @@ export const baseURL = "http://localhost:5678/api";
  *
  * @function getWorks
  * @returns {Promise<Array<{id:number|string, title:string, imageUrl:string, category:{name:string}}>>}
- *
+ * @throws {Error} Si la réponse HTTP n'est pas OK (4xx/5xx) ou en cas d'erreur réseau.
  */
 export async function getWorks() {
   return fetchData(`${baseURL}/works`);
@@ -27,7 +24,7 @@ export async function getWorks() {
  *
  * @function getCategories
  * @returns {Promise<Array<{id:number|string, name:string}>>}
- *
+ * @throws {Error} Si la réponse HTTP n'est pas OK (4xx/5xx) ou en cas d'erreur réseau.
  */
 export async function getCategories() {
   return fetchData(`${baseURL}/categories`);
@@ -41,9 +38,7 @@ export async function getCategories() {
  * @param {number|string} id - Identifiant du projet à supprimer.
  * @param {string} token - Jeton JWT (format: Bearer <token>) pour l'authentification.
  * @returns {Promise<void|undefined>} Retourne `undefined` si l'API répond 204 No Content.
- *
- * @throws {Error} Si la réponse HTTP n'est pas OK (4xx/5xx).
- *
+ * @throws {Error} Si la réponse HTTP n'est pas OK (4xx/5xx) ou en cas d'erreur réseau.
  */
 export async function deleteWork(id, token) {
   return fetchData(`${baseURL}/works/${id}`, "DELETE", {
@@ -60,8 +55,7 @@ export async function deleteWork(id, token) {
  * @param {string} password - Mot de passe.
  * @returns {Promise<{ token: string }>} Objet contenant le jeton d'authentification.
  *
- * @throws {Error} Si l'email/mot de passe est invalide ou en cas d'erreur réseau.
- *
+ * - Si `response.ok` est faux, lève une `Error` avec un message provenant du backend si disponible, sinon générique.
  */
 export async function loginUser(email, password) {
   return fetchData(`${baseURL}/users/login`, "POST", {
@@ -71,66 +65,88 @@ export async function loginUser(email, password) {
 
 
 /**
- * Exécute une requête HTTP générique (GET/POST/PUT/DELETE/PATCH) avec gestion d’erreurs.
+ * Crée un nouveau projet (multipart).
+ * @param {FormData} formData - image, title, category
+ * @param {string} token - Bearer JWT
+ * @returns {Promise<{id:number|string,title:string,imageUrl:string,category:{id:number|string,name:string}}>}
+ * @throws {Error} Si la réponse HTTP n'est pas OK (4xx/5xx) ou en cas d'erreur réseau.
+ */
+export async function createWork(formData, token) {
+  return fetchData(`${baseURL}/works`, "POST", {
+    Authorization: `Bearer ${token}`,
+  }, formData);
+}
+
+
+/**
+ * Indique si la valeur `body` fournie est un objet `FormData` utilisable
+ * dans l'environnement courant (retourne `false` si `FormData` n'existe pas).
+ *
+ * @function isFormData
+ * @param {unknown} body - Valeur à tester.
+ * @returns {boolean} `true` si `body` est une instance de `FormData`, sinon `false`.
+ */
+function isFormData(body) {
+  return typeof FormData !== "undefined" && body instanceof FormData;
+}
+
+
+/**
+ * Exécute une requête HTTP générique (GET/POST/PUT/DELETE/PATCH).
  *
  * Comportement :
- * - Sérialise automatiquement `body` en JSON si fourni (⚠️ pour `FormData`, ne pas passer par `body` ici sans adapter).
- * - Lève une erreur explicite si `response.ok` est `false` (statuts non 2xx).
- * - Retourne le JSON parsé, ou `undefined` si la réponse est `204 No Content`.
+ * - Sérialise automatiquement `body` en JSON si c'est un objet simple.
+ * - Accepte `FormData` sans forcer le `Content-Type`.
+ * - Accepte une chaîne ou un `Blob` tel quel.
+ * - Si `response.ok` est faux, lève une `Error` avec un message générique.
+ * - Retourne JSON si `Content-Type` contient `application/json`, sinon texte brut.
+ * - Retourne `undefined` si le statut est `204 No Content`.
  *
  * @async
  * @template T
- * @param {string} url - URL de la ressource à interroger.
- * @param {"GET"|"POST"|"PUT"|"DELETE"|"PATCH"} [method="GET"] - Méthode HTTP.
- * @param {Record<string, string>} [headers={}] - En-têtes HTTP à inclure.
- * @param {unknown} [body=null] - Corps de la requête (sera `JSON.stringify` s'il est non nul).
- * @returns {Promise<T|undefined>} Données JSON parsées (`T`) ou `undefined` si 204.
- *
- * @throws {Error} En cas d’erreur réseau ou de statut HTTP non 2xx.
- * Le message d’erreur est de la forme `"<status> - <message lisible>"`.
- *
- * @example
- * // GET simple
- * const works = await fetchData("http://localhost:5678/api/works");
- *
- * @example
- * // POST JSON
- * await fetchData("http://localhost:5678/api/works", "POST", {
- *   "Content-Type": "application/json",
- *   "Authorization": `Bearer ${token}`
- * }, { title: "Projet", imageUrl: "/img.png", categoryId: 2 });
- *
- * @example
- * // DELETE (réponse 204 -> retourne undefined)
- * await fetchData(`http://localhost:5678/api/works/123`, "DELETE", {
- *   "Authorization": `Bearer ${token}`
- * });
+ * @param {string} url
+ * @param {"GET"|"POST"|"PUT"|"DELETE"|"PATCH"} [method="GET"]
+ * @param {Record<string, string>} [headers={}]
+ * @param {unknown} [body=null]
+ * @returns {Promise<T|undefined>}
+ * @throws {Error} Si la réponse HTTP n'est pas OK (4xx/5xx) ou en cas d'erreur réseau.
  */
-export async function fetchData(url, method = "GET", headers = {}, body = null) {
-  try {
-    const response = await fetch(url, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : null,
-    });
+export async function fetchData(
+  url,
+  method = "GET",
+  headers = {},
+  body = null,
+) {
+  const init = {
+    method: String(method).toUpperCase(),
+    headers: { Accept: "application/json", ...headers },
+  };
 
-    if (!response.ok) {
-      const errorCode = response.status;
-      let message = "Une erreur est survenue.";
+  if (body != null) {
+    if (isFormData(body)) {
+      init.body = body;
 
-      if (errorCode === 400) message = "Requête invalide.";
-      else if (errorCode === 401) message = "Accès non autorisé.";
-      else if (errorCode === 404) message = "Ressource introuvable.";
-      else if (errorCode === 500) message = "Erreur interne du serveur.";
-
-      throw new Error(`${errorCode} - ${message}`);
+      delete init.headers["Content-Type"];
+      delete init.headers["content-type"];
+    } else {
+      init.headers["Content-Type"] = init.headers["Content-Type"] || "application/json";
+      init.body = JSON.stringify(body);
     }
-    
-    if (response.status === 204) return;
-    return await response.json();
-
-  } catch (error) {
-    console.error("[API]", error.message);
-    throw error;
   }
+
+  const response = await fetch(url, init);
+
+  if (!response.ok) {
+    const err = new Error("Une erreur est survenue. réessayez plus tard.");
+    err.status = response.status;
+    throw err;
+  }
+
+  if (response.status === 204) return;
+
+  const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
+
+  return contentType.includes("application/json")
+  ? response.json()
+  : response.text();
 }

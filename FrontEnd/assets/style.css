@@ -162,14 +162,14 @@ main {
 	width: 100%;
 }
 
-#introduction article {
+#introduction-article {
 	flex: 1
 }
-#introduction h2 {
+#introduction-article h2 {
 	margin-bottom: 1em;
 }
 
-#introduction p {
+#introduction-article p {
 	margin: 0 auto 0.9em auto;
 	color: var(--color-figure-and-contact);
 }
@@ -231,6 +231,8 @@ main {
 }
 .gallery img {
 	width: 100%;
+	height: 100%;
+	max-height: 407px;
 }
 .gallery figure figcaption {
 	color: var(--color-figure-and-contact);
@@ -376,6 +378,8 @@ footer .link-page {
 	display: none;
 }
 .modal-content {
+	display: flex;
+  overflow: hidden;
 	flex-direction: column;
 	background-color: var(--color-white);
 	width: 90%;
@@ -412,6 +416,7 @@ footer .link-page {
 	align-items: center;
 	justify-content: space-between;
 	height: 100%;
+	min-height: 0;
 	position: relative;
 }
 #error-delete-project {
@@ -427,6 +432,11 @@ footer .link-page {
 	justify-content: center;
   grid-template-columns: repeat(5, 77px);
   gap: 30px 8px;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+	padding-inline-end: 8px;
+  margin-inline-end: -8px;
 }
 .modal-gallery-content img {
 	position: relative;
@@ -462,6 +472,7 @@ footer .link-page {
 }
 
 .btn-add-gallery {
+	display: block;
 	margin: 0 auto;
 	max-width: 237px;
 	width: 100%;
@@ -473,9 +484,12 @@ footer .link-page {
 	border-radius: 60px;
 	cursor: pointer;
 	font-weight: 700;
-	font-family: syne;
+	font-family: 'Syne';
 	font-size: 14px;
 	margin-bottom: 42px;
+}
+.btn-add-gallery:hover {
+	background-color: var(--color-input-hover);
 }
 
 /************* MODAL step-two ***********/
@@ -484,6 +498,7 @@ footer .link-page {
 }
 
 #step-two .modal-header {
+	flex: 0 0 auto;
 	display: flex;
 	justify-content: space-between;
 	margin: 32px 35px 13px 35px;
@@ -497,52 +512,34 @@ footer .link-page {
 	font-size: 18px;
 }
 
+/************* Formulary step-two ***********/
 #upload-form {
-	display: flex;
-	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+	overscroll-behavior: contain;
+	overflow: auto;
 }
 
-.form-group {
+#step-two .form-group {
 	margin: 0 auto;
+	width: 420px;
+	max-width: 100%;
 }
 #form-group-header {
-	height: 169px;
-	width: 420px;
+	height: 166px;
+	width: 100%;
 	background-color: var(--color-modal-group-header);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: space-evenly;
 	border-radius: 3px;
-	margin-bottom: 30px;
-}
-.icon-placeholder {
-	font-size: 68px;
-	color: var(--color-modal-icon);
-}
-.upload-label {
-	background-color: var(--color-modal-label-background);
-	color: var(--color-modal-label-text);
-	border-radius: 50px;
-	padding: 10px 30px;
-	cursor: pointer;
-}
-.upload-text {
-	border: none;
-}
-input[type="file"] {
-display: none;
-}
-.upload-info {
-	font-size: 10px;
-	color: var(--color-modal-info);
-	font-weight: 400;
-}
-
-/************* MODAL step-two Formulary ***********/
-#form-group-header {
 	margin-bottom: 20px;
 	position: relative;
+}
+#step-two .icon-placeholder {
+	font-size: 68px;
+	color: var(--color-modal-icon);
 }
 #error-message-image {
 	position: absolute;
@@ -550,6 +547,30 @@ display: none;
   left: 50%;
   transform: translateX(-50%);
 	text-align: center;
+}
+#step-two .upload-label {
+	background-color: var(--color-modal-label-background);
+	color: var(--color-modal-label-text);
+	border-radius: 50px;
+	padding: 10px 30px;
+	cursor: pointer;
+}
+#step-two .upload-text {
+	border: none;
+}
+#step-two input[type="file"] {
+display: none;
+}
+#step-two .upload-info {
+	font-size: 10px;
+	color: var(--color-modal-info);
+	font-weight: 400;
+}
+#step-two .preview-image {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: cover;
+	cursor: pointer;
 }
 
 #form-group-main {
@@ -559,8 +580,8 @@ display: none;
 #error-message-title {
 	position: absolute;
 	top: 110%;
-  left: 50%;
-  transform: translateX(-50%);
+	left: 50%;
+	transform: translateX(-50%);
 	text-align: center;
 }
 
@@ -573,14 +594,15 @@ display: none;
 #form-group-footer {
 	position: relative;	
 }
-#error-message-category {
-	position: absolute;
-	top: 110%;
-  left: 50%;
-  transform: translateX(-50%);
+#form-group-main input[type="text"],
+#form-group-footer select#category {
+	padding-left: 16px;
+	font-size: 14px;
+	font-weight: 400;
+	color: var(--color-modal-info);
 }
 #form-group-main input,
-.select-wrapper {
+#step-two .select-wrapper {
 	border: none;
 	height: 51px;
 	box-shadow: 0px 4px 14px 0px #00000017;
@@ -594,7 +616,7 @@ display: none;
 	height: 100%;
 	padding: 0 20px ;
 }
-.chevron {
+#step-two .chevron {
 	pointer-events: none;
 	position: absolute;
 	right: 10px;
@@ -602,39 +624,135 @@ display: none;
 	transform: translateY(-50%);
 	color: var(--color-modal-chevron);
 }
+#error-message-category {
+	position: absolute;
+	top: 110%;
+	left: 50%;
+	transform: translateX(-50%);
+}
 
-.btn-form-validate {
-	margin: 0 auto;
+#step-two .dividing-line {
+	margin: 68px auto 38px auto;
+}
+
+#step-two .btn-form-validate {
+	position: sticky;
+	height: 100%;
+	max-height: 36px;
+	display: block;
+	margin: 0 auto 42px;
 	max-width: 237px;
 	width: 100%;
-	max-height: 36px;
-	height: 26px;
 	color: var(--color-white);
 	border: none;
 	border-radius: 60px;
 	font-weight: 700;
-	font-family: syne;
+	font-family: 'Syne';
 	font-size: 14px;
 }
-.btn-form-not-valid {
+#step-two .btn-form-not-valid {
 	cursor: not-allowed;
 	background-color: var(--color-modal-button-form-validate);
 }
-.btn-form-is-valid {
+#step-two .btn-form-is-valid {
 	cursor: pointer;
 	background-color: var(--color-title);
 }
-
-#form-group-main input[type="text"],
-#form-group-footer input[type="category"] {
-	padding-left: 18px;
-	font-size: 14px;
-	font-weight: 400;
-	color: var(--color-modal-info);
+#step-two .btn-form-is-valid:hover {
+background-color: var(--color-input-hover);
 }
-.preview-image {
-	max-width: 100%;
-	max-height: 100%;
-	object-fit: cover;
-	cursor: pointer;
+
+
+/* ====== Phone ≤ 767px ====== */
+@media (max-width: 767px) {
+  /* Header / nav */
+  .header-container { 
+		margin: 24px auto 64px;
+		align-items: center;
+	}
+  nav ul {
+		gap: 18px; 
+	}
+
+  /* Introduction */
+  #introduction {
+    flex-direction: column;
+    gap: 24px;
+    margin: 0 auto 72px 0;
+  }
+
+  /* Filters */
+  #filters {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 0 24px;
+    margin-top: 12px;
+  }
+  #filters button {
+    font-size: 14px;
+    padding: 8px 18px;
+  }
+
+  /* Galery */
+  .gallery {
+    grid-template-columns: 1fr 1fr;
+    grid-column-gap: 10px;
+  }
+
+  /* Title "Mes projets" + link "Modifier" */
+  .portfolio-title-wrapper {
+		text-align: center;
+	}
+  .link-container {
+    position: static;
+    transform: none;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  /* Section contact */
+  #contact {
+    width: 100%;
+    margin: 40px auto 0;
+  }
+  #contact form {
+		max-width: 100%;
+	}
+
+  /* Footer */
+  footer nav ul {
+		justify-content: center;
+	}
+
+  /* Modale */
+	/* step-one */
+	.modal-gallery-container {
+		padding: 0 10px;
+	}
+	/* step-two */
+	#upload-form {
+		padding: 0 10px;
+	}
+}
+
+/* ====== Screen ≤ 480px ====== */
+@media (max-width: 480px) {
+	.header-container {
+		flex-direction: column;
+		gap: 15px;
+	}
+
+	#introduction-article h2,
+	#introduction-article p {
+		text-align: center;
+	}
+
+  .gallery {
+		grid-template-columns: 1fr;
+	}
+
+	/* modal step-one */
+  .modal-gallery-content {
+    grid-template-columns: repeat(3, 77px);
+  }
 }

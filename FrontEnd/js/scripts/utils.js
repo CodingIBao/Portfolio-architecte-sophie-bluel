@@ -1,52 +1,40 @@
+// ./js/script/utils.js
+
+/** @typedef {import("./dom.js").Work} Work */
+/** @typedef {import("./dom.js").Category} Category */
+
+
 /**
- * Retourne une liste de catégories uniques à partir d’un tableau de projets.
- *
- * Les doublons sont supprimés en se basant uniquement sur `category.id`.
- *
- * @param {Work[]} works - Tableau d’objets projet contenant une propriété `category`.
- * @returns {Category[]} Tableau des catégories uniques.
- *
- * @example
- * const works = [
- *   { id: 1, title: "Abajour Tahina", category: { id: 1, name: "Objets" } },
- *   { id: 2, title: "Appartement Paris V", category: { id: 2, name: "Appartements" } },
- *   { id: 3, title: "Restaurant Sushisen", category: { id: 3, name: "Hotels & restaurants" } },
- *   { id: 4, title: "Villa Balisière", category: { id: 2, name: "Appartements" } }
- * ];
- *
- * getUniqueCategories(works);
- * // => [
- * //   { id: 1, name: "Objets" },
- * //   { id: 2, name: "Appartements" },
- * //   { id: 3, name: "Hotels & restaurants" }
- * // ]
+ * Retourne les catégories uniques (par id) à partir des works.
+ * @param {Work[]} works
+ * @returns {Category[]}
  */
 export function getUniqueCategories(works) {
-  const allCategories = works.map(work => work.category);
-  const uniqueCategoryIds = new Set();
+  const seen = new Set();
+  /** @type {Category[]} */
+  const out = [];
 
-  const uniqueCategories = allCategories.filter(category => {
-    const isDuplicate = uniqueCategoryIds.has(category.id);
+  for (const w of (Array.isArray(works) ? works : [])) {
+    const c = w?.category || null;
+    const id = (c && c.id != null) ? c.id : (w?.categoryId != null ? w.categoryId : null);
+    if (id == null) continue;
 
-    uniqueCategoryIds.add(category.id);
-    return !isDuplicate;
-  });
+    const key = String(id);
+    if (seen.has(key)) continue;
+    seen.add(key);
 
-  return uniqueCategories;
+    out.push({
+      id,
+      name: (c && typeof c.name === "string") ? c.name : ""
+    });
+  }
+  return out;
 }
 
 
 /**
- * Extrait le nom de la catégorie depuis les paramètres de l'URL.
- *
- * Retourne toujours la valeur en minuscule. Si le paramètre `category`
- * est absent ou égal à `"all"`, retourne `null`.
- *
- * @returns {string|null} Nom de la catégorie en minuscule ou `null`.
- *
- * @example
- * // URL : http://localhost:3000/?category=Salon
- * getCategoryNameFromQueryParam(); // "salon"
+ * Lit `?category=...` et renvoie le slug en minuscule (ou null).
+ * @returns {string|null}
  */
 export function getCategoryNameFromQueryParam () {
   const params = new URLSearchParams(window.location.search);
@@ -57,18 +45,9 @@ export function getCategoryNameFromQueryParam () {
 
 
 /**
- * Convertit un texte en slug compatible avec une URL.
- *
- * - Met en minuscule
- * - Supprime les accents et caractères spéciaux
- * - Remplace les espaces par des tirets
- * - Remplace `&` par "et"
- *
- * @param {string} text - Texte à transformer.
- * @returns {string} Slug généré.
- *
- * @example
- * slugify("Hôtels & Restaurants"); // "hotels-et-restaurants"
+ * Convertit un texte en slug URL-safe.
+ * @param {string} text
+ * @returns {string}
  */
 export function slugify(text) {
   return text
@@ -82,15 +61,10 @@ export function slugify(text) {
 }
 
 
+
 /**
- * Vérifie si un utilisateur est connecté en vérifiant la présence d’un token.
- *
- * @returns {boolean} `true` si un token est présent et non vide, sinon `false`.
- *
- * @example
- * if (isLogIn()) {
- *   // Afficher les éléments admin
- * }
+ * Indique si un token d’auth existe en localStorage.
+ * @returns {boolean}
  */
 export function isLogIn() {
   return !!localStorage.getItem("token");
@@ -98,17 +72,9 @@ export function isLogIn() {
 
 
 /**
- * Gère la déconnexion de l'utilisateur.
- *
- * Si `isAuth` est vrai :
- * - Ajoute un listener sur le lien "logout"
- * - Supprime le token du `localStorage`
- * - Redirige vers la page de connexion
- *
- * @param {boolean} isAuth - Indique si l'utilisateur est connecté.
- *
- * @example
- * logOut(isLogIn());
+ * Attache le handler de déconnexion (si connecté).
+ * @param {boolean} isAuth
+ * @returns {void}
  */
 export function logOut(isAuth) {
   const logoutLink = document.getElementById("link-login");
@@ -124,3 +90,51 @@ export function logOut(isAuth) {
     window.location.replace("./login.html");
   })
 }
+
+
+/**
+ * Nettoie un nom de fichier pour affichage/alt.
+ * @param {string} fileName
+ * @returns {string}
+ */
+export function cleanFileName(fileName) {
+  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+  const cleanedName = nameWithoutExt.replace(/[^a-zA-ZÀ-ÿ0-9\s\-']/g, " ");
+  return cleanedName.length > 100
+   ? cleanedName.slice(0,100) + "..."
+   :cleanedName;
+}
+
+
+/**
+ * Valide un fichier image (type/poids).
+ * @param {File} file
+ * @returns {{ok:true} | {ok:false, message:string}}
+ */
+export function validateImageFile(file) {
+  const MAX = 4 * 1024 * 1024;
+  const ALLOWED = ["image/jpeg", "image/png"];
+
+  if (!ALLOWED.includes(file.type)) {
+    return {ok: false, message: UI_ERROR_MSG.extension};
+  }
+  if (file.size > MAX) {
+    return {ok: false, message: UI_ERROR_MSG.size}
+  }
+  return { ok: true};
+}
+
+
+// Table de messages UI (au niveau module)
+export const UI_ERROR_MSG = {
+  delete: "Suppression échouée. Veuillez réessayer plus tard.",
+  upload: "Échec de l’envoi. Veuillez réessayer plus tard.",
+  categories: "Impossible de charger les catégories.",
+  gallery: "Impossible de charger les projets. Veuillez réessayer plus tard.",
+  form: "Veuillez remplir tous les champs.",
+  email: "Adresse email invalide.",
+  login: "Identifiants incorrects. Veuillez réessayer.",
+  extension: "Formats acceptés : JPEG ou PNG.",
+  size: "Image trop lourde (4 Mo max).",
+  generic: "Une erreur est survenue. Réessayez plus tard."
+};
