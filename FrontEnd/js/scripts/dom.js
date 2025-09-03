@@ -1,8 +1,18 @@
-// ./js/script/dom.js
+// ./js/scripts/dom.js
 
+import { 
+  createElement, 
+  slugify, 
+  validateImageFile, 
+  cleanFileName, 
+  UI_ERROR_MESSAGES 
+} from "./utils.js";
 
-import { slugify, validateImageFile, cleanFileName, UI_ERROR_MSG } from "./utils.js";
-import { getCategories, deleteWork, createWork } from "./api.js";
+import { 
+  getCategories, 
+  deleteWork, 
+  createWork 
+} from "./api.js";
 
 
 /**
@@ -28,6 +38,10 @@ import { getCategories, deleteWork, createWork } from "./api.js";
  * @property {{ id?: number|string, name?: string } | null} [category]
  * @property {number|string} [categoryId]
  */
+/**
+ * @typedef {Object} CreateFigureOptions
+ * @property {boolean} [withDelete=false]
+ */
 
 
 /** =========================
@@ -38,14 +52,19 @@ const gallery = document.querySelector(".gallery");
 
 
 const focusableSelectors = `
-  a[href], button:not([disabled]), textarea, input[type="text"],
-  input[type="email"], input[type="file"], select,
+  a[href], 
+  button:not([disabled]), 
+  textarea, 
+  input[type="text"], 
+  input[type="email"], 
+  input[type="file"], 
+  select,
   [tabindex]:not([tabindex="-1"])
 `;
 
 
 /** IDs d’erreurs */
-const ERR = {
+const ERROR_IDS = {
   upload: "error-add-project",
   del: "error-delete-project",
   image: "error-message-image",
@@ -74,11 +93,11 @@ const ERROR_TARGETS = {
  * @param {"generic"|"upload"|"delete"|"categories"|"gallery"} context
  * @param {string} [id] - id du <p> d’erreur (défaut: "error-<context>")
  */
-function showApiError(context = "generic", id) {
+function showUiError(context = "generic", id) {
   const target = ERROR_TARGETS[context] || ERROR_TARGETS.generic;
   const pid = id || `error-${context}`;
-  const msg = UI_ERROR_MSG[context] || UI_ERROR_MSG.generic;
-  createErrorMessage(target, pid, msg);
+  const msg = UI_ERROR_MESSAGES[context] || UI_ERROR_MESSAGES.generic;
+  renderErrorMessage(target, pid, msg);
 }
 
 
@@ -86,7 +105,7 @@ function showApiError(context = "generic", id) {
  * Supprime un ou plusieurs messages d’erreur par id.
  * @param {...string|string[]} ids - Un ou plusieurs ids (ou un tableau d’ids).
  */
-function clearErrors(...ids) {
+function clearErrorMessage(...ids) {
   const flat = ids.flat();
   flat.forEach((id) => document.getElementById(String(id))?.remove());
 }
@@ -101,7 +120,7 @@ function clearErrors(...ids) {
  * @param {"off"|"polite"|"assertive"} [ariaLive="polite"]
  * @returns {HTMLParagraphElement|undefined}
  */
-export function createErrorMessage(container, id, message, className = "error-message", ariaLive = "polite" ) {
+export function renderErrorMessage(container, id, message, className = "error-message", ariaLive = "polite" ) {
   const parent = typeof container === "string" ? document.querySelector(container) : container;
   if (!parent) return;
 
@@ -121,32 +140,9 @@ export function createErrorMessage(container, id, message, className = "error-me
 
 
 /** Affiche une erreur globale à la place de la galerie principale. */
-export function displayGalleryError() {
+export function renderGalleryError() {
   gallery.innerHTML = "";
-  showApiError("gallery", ERR.gallery);
-}
-
-
-/** =========================
- *  Bloc: Helpers / UI génériques
- *  ========================= */
-
-/**
- * Crée un élément avec attributs et texte.
- * @param {keyof HTMLElementTagNameMap} tag
- * @param {Record<string, string>} [attributes={}]
- * @param {string} [textContent=""]
- * @returns {HTMLElement}
- */
-export function createElement(tag, attributes = {}, textContent = "") {
-  const element = document.createElement(tag);
-  Object.entries(attributes).forEach(([key, value]) => {
-    element.setAttribute(key, value);
-  });
-  if (textContent != undefined && textContent !== null) {
-    element.textContent = String(textContent);
-  }
-  return element;
+  showUiError("gallery", ERROR_IDS.gallery);
 }
 
 
@@ -165,6 +161,7 @@ export function domModificationLogIn(isAuth) {
   if (isAuth) {
     link.textContent = "logout";
     link.setAttribute("aria-label", "Se déconnecter");
+    
   } else {
     link.textContent = "login";
     link.setAttribute("aria-label", "Se connecter");
@@ -179,46 +176,29 @@ export function domModificationLogIn(isAuth) {
 export function addAdminBanner() {
   if (document.querySelector(".admin-banner")) return;
 
-  const banner = document.createElement("div");
-  banner.classList.add("admin-banner");
-  
-  const iconLink = document.createElement("a");
-  iconLink.classList.add("icon-link", "edit-link");
-  iconLink.href = "#";
-  
-  const icon = document.createElement("i");
-  icon.classList.add("fa-regular", "fa-pen-to-square");
+  const banner = createElement("div", { class: "admin-banner" });
 
-  const textLink = document.createElement("a");
-  textLink.classList.add("text-link", "edit-link");
-  textLink.href = "#";
-
-  const text = document.createElement("span");
-  text.textContent = "Mode édition";
-
+  const icon = createElement("i", { class: "fa-regular fa-pen-to-square" });
+  const iconLink = createElement("a", { href: "#", class: "icon-link edit-link" });
   iconLink.appendChild(icon);
+
+  const text = createElement("span", {}, "Mode édition");
+  const textLink = createElement("a", { href: "#", class: "text-link edit-link" });
   textLink.appendChild(text);
-  banner.append(iconLink,textLink);
-  
+
+  banner.append(iconLink, textLink);
   document.body.prepend(banner);
 
-  textLink.addEventListener("mouseenter", ()=> {
-    icon.classList.add("banner-hover-sync");
-    text.classList.add("banner-hover-sync");
-  });
-  textLink.addEventListener("mouseleave", ()=> {
-    icon.classList.remove("banner-hover-sync");
-    text.classList.remove("banner-hover-sync");
-  });
+  const toggleHover = (add) => {
+    icon.classList[add ? "add" : "remove"]("banner-hover-sync");
+    text.classList[add ? "add" : "remove"]("banner-hover-sync");
+  };
 
-  iconLink.addEventListener("mouseenter", ()=> {
-    text.classList.add("banner-hover-sync");
-    icon.classList.add("banner-hover-sync");
-  });
-  iconLink.addEventListener("mouseleave", ()=> {
-    text.classList.remove("banner-hover-sync");
-    icon.classList.remove("banner-hover-sync");
-  });
+  textLink.addEventListener("mouseenter", () => toggleHover(true));
+  iconLink.addEventListener("mouseenter", () => toggleHover(true));
+
+  textLink.addEventListener("mouseleave", () => toggleHover(false));
+  iconLink.addEventListener("mouseleave", () => toggleHover(false));
 }
 
 
@@ -231,110 +211,31 @@ export function addEditLink() {
   const h2 = document.querySelector("#portfolio h2");
   if (!h2) return;
 
-  const wrapper = document.createElement("div");
-  wrapper.classList.add("portfolio-title-wrapper");
+  const wrapper = createElement("div", { class: "portfolio-title-wrapper" });
+  const linkContainer = createElement("div", { class: "link-container" });
 
-  const linkContainer = document.createElement("div");
-  linkContainer.classList.add("link-container");
-  
-  const iconLink = document.createElement("a");
-  iconLink.classList.add("icon-link", "edit-link");
-  iconLink.href = "#";
-
-  const icon = document.createElement("i");
-  icon.classList.add("fa-regular", "fa-pen-to-square");
-  
-  const textLink = document.createElement("a");
-  textLink.classList.add("text-link", "edit-link");
-  textLink.href = "#";
-
-  const text = document.createElement("span");
-  text.textContent = "Modifier";
-  
+  const icon = createElement("i", { class: "fa-regular fa-pen-to-square" });
+  const iconLink = createElement("a", { href: "#", class: "icon-link edit-link" });
   iconLink.appendChild(icon);
+
+  const text = createElement("span", {}, "Modifier");
+  const textLink = createElement("a", { href: "#", class: "text-link edit-link" });
   textLink.appendChild(text);
+
   linkContainer.append(iconLink, textLink);
-
   h2.replaceWith(wrapper);
-  wrapper.append(h2,linkContainer);
+  wrapper.append(h2, linkContainer);
+
+  const toggleHover = (add) => {
+    icon.classList[add ? "add" : "remove"]("portfolio-hover-sync");
+    text.classList[add ? "add" : "remove"]("portfolio-hover-sync");
+  };
+
+  textLink.addEventListener("mouseenter", () => toggleHover(true));
+  iconLink.addEventListener("mouseenter", () => toggleHover(true));
   
-  textLink.addEventListener("mouseenter", ()=> {
-    icon.classList.add("portfolio-hover-sync");
-    text.classList.add("portfolio-hover-sync");
-  });
-  textLink.addEventListener("mouseleave", ()=> {
-    icon.classList.remove("portfolio-hover-sync");
-    text.classList.remove("portfolio-hover-sync");
-  });
-
-  iconLink.addEventListener("mouseenter", ()=> {
-    text.classList.add("portfolio-hover-sync");
-    icon.classList.add("portfolio-hover-sync");
-  });
-  iconLink.addEventListener("mouseleave", ()=> {
-    text.classList.remove("portfolio-hover-sync");
-    icon.classList.remove("portfolio-hover-sync");
-  });
-}
-
-
-/** =========================
- *  Bloc: Galerie principale
- *  ========================= */
-
-/**
- * Crée un élément <figure> représentant un projet (work) pour la galerie.
- *
- * - Contient toujours une <img> avec src/alt basés sur le work
- * - Si `withDelete` est vrai :
- *   → Ajoute un bouton "supprimer" (accessible avec aria-label) + icône corbeille
- *   → Le bouton contient data-id pour identifier le work
- * - Sinon :
- *   → Ajoute un <figcaption> avec le titre du projet
- *
- * @param {Work} work - Objet projet (id, title, imageUrl, category…)
- * @param {{ withDelete?: boolean }} [options={}] - Options, `withDelete` pour ajouter le bouton supprimer
- * @returns {HTMLFigureElement} La figure DOM prête à être insérée dans la galerie
- */
-function createWorkFigure(work, {withDelete = false} = {}) {
-  const figure = document.createElement("figure");
-  figure.setAttribute("data-id", String(work.id));
-
-  const img = document.createElement("img");
-  img.src = work.imageUrl;
-  img.alt = work.title || "Projet";
-
-  figure.append(img);
-
-  if (withDelete) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "delete-btn";
-    btn.dataset.id = String(work.id);
-    btn.setAttribute("aria-label", `Supprimer « ${work.title || "ce projet"} »`);
-
-    const icon = document.createElement("i");
-    icon.className = "fa-solid fa-trash-can";
-    icon.setAttribute("aria-hidden", "true");
-
-    btn.appendChild(icon);
-    figure.prepend(btn);
-
-  } else {
-    figure.appendChild(createElement("figcaption", {}, work.title));
-  }
-
-  return figure;
-}
-
-
-/** Affiche la galerie principale.
- * @param {Work[]} works
- * @returns {void}
- */
-export function displayWorks(works) {
-  gallery.innerHTML = "";
-  works.forEach(work => gallery.appendChild(createWorkFigure(work)));
+  textLink.addEventListener("mouseleave", () => toggleHover(false));
+  iconLink.addEventListener("mouseleave", () => toggleHover(false));
 }
 
 
@@ -344,24 +245,20 @@ export function displayWorks(works) {
 
 /**
  * Met à jour l’état visuel et ARIA du filtre actif.
- *
- * - Supprime la classe "active" et aria-pressed="true" de tous les boutons du conteneur
- * - Ajoute la classe "active" et aria-pressed="true" uniquement sur le bouton actif
- *
- * Objectif :
- * - Indiquer visuellement quel filtre est actif
- * - Maintenir l’accessibilité (ARIA) pour les utilisateurs de lecteurs d’écran
- *
  * @param {HTMLButtonElement} activeButton - Le bouton à activer
  * @param {HTMLElement} container - Le conteneur qui contient tous les boutons de filtres
  * @returns {void}
  */
 function setActiveFilter(activeButton, container) {
-  const buttons = container.querySelectorAll("button");
-  buttons.forEach(btn => {
-    btn.classList.remove("active");
-    btn.setAttribute("aria-pressed", "false");
-  });
+  if (!activeButton || !container) return;
+
+  const previous = container.querySelector("button.active");
+  
+  if (previous && previous !== activeButton) {
+    previous.classList.remove("active");
+    previous.setAttribute("aria-pressed", "false");
+  };
+
   activeButton.classList.add("active");
   activeButton.setAttribute("aria-pressed", "true");
 }
@@ -451,6 +348,66 @@ export function displayFilters(categories, works) {
 
 
 /** =========================
+ *  Bloc: Galerie principale
+ *  ========================= */
+
+/**
+ * Crée un élément <figure> représentant un projet (work) pour la galerie.
+ *
+ * - Contient toujours une <img> avec src/alt basés sur le work
+ * - Si `withDelete` est vrai :
+ *   → Ajoute un bouton "supprimer" (accessible avec aria-label) + icône corbeille
+ *   → Le bouton contient data-id pour identifier le work
+ * - Sinon :
+ *   → Ajoute un <figcaption> avec le titre du projet
+ *
+ * @param {Work} work - Objet projet (id, title, imageUrl, category…)
+ * @param {{ withDelete?: boolean }} [options={}] - Options, `withDelete` pour ajouter le bouton supprimer
+ * @returns {HTMLFigureElement} La figure DOM prête à être insérée dans la galerie
+ */
+function createWorkFigure(work, {withDelete = false} = {}) {
+  const figure = document.createElement("figure");
+  figure.setAttribute("data-id", String(work.id));
+
+  const img = document.createElement("img");
+  img.src = work.imageUrl;
+  img.alt = work.title;
+
+  figure.append(img);
+
+  if (withDelete) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "delete-btn";
+    btn.dataset.id = String(work.id);
+    btn.setAttribute("aria-label", `Supprimer « ${work.title || "ce projet"} »`);
+
+    const icon = document.createElement("i");
+    icon.className = "fa-solid fa-trash-can";
+    icon.setAttribute("aria-hidden", "true");
+
+    btn.appendChild(icon);
+    figure.prepend(btn);
+
+  } else {
+    figure.appendChild(createElement("figcaption", {}, work.title));
+  }
+
+  return figure;
+}
+
+
+/** Affiche la galerie principale.
+ * @param {Work[]} works
+ * @returns {void}
+ */
+export function displayWorks(works) {
+  gallery.innerHTML = "";
+  works.forEach(work => gallery.appendChild(createWorkFigure(work)));
+}
+
+
+/** =========================
  *  Bloc: Modale – Focus trap
  *  ========================= */
 
@@ -528,8 +485,6 @@ export function displayModal() {
   };
 
   editLinks.forEach(link => {
-    if (link.dataset.openBound === "true") return;
-    link.dataset.openBound = "true";
     link.addEventListener("click", onOpen);
   });
 }
@@ -545,24 +500,26 @@ export function mountModalNavigation() {
   const btnBack = document.querySelector(".modal-icon-back");
   if (!stepOne || !stepTwo) return;
 
-  if (btnNext && btnNext.dataset.boundAdd !== "true") {
-    btnNext.dataset.boundAdd = "true";
+  if (btnNext) {
     btnNext.addEventListener("click", async () => {
       stepOne.style.display = "none";
       stepTwo.style.display = "flex";
-      await populateCategorySelect();
-      clearErrors(ERR.upload);
+      await loadCategoryOptions();
+      clearErrorMessage(ERROR_IDS.upload);
       const f = stepTwo.querySelectorAll(focusableSelectors); if (f.length) f[0].focus();
       trapFocusInModal();
     });
   }
 
-  if (btnBack && btnBack.dataset.boundBack !== "true") {
-    btnBack.dataset.boundBack = "true";
+  if (btnBack) {
     btnBack.addEventListener("click", () => {
       stepTwo.style.display = "none";
       stepOne.style.display = "flex";
-      clearErrors(ERR.upload, ERR.image, ERR.title, ERR.category);
+      clearErrorMessage(
+        ERROR_IDS.upload, 
+        ERROR_IDS.image, 
+        ERROR_IDS.title, 
+        ERROR_IDS.category);
       const f = stepOne.querySelectorAll(focusableSelectors); if (f.length) f[0].focus();
       trapFocusInModal();
     });
@@ -588,16 +545,16 @@ export function exitModal() {
     modalContentStepTwo.style.display = "none";
     
     if (stepTwoWasOpen) {
-      resetImagePreview();
-      resetTitleInput();
-      resetCategoryInput();
-      clearErrors(
-        ERR.upload,
-        ERR.del,
-        ERR.image,
-        ERR.title,
-        ERR.category,
-        ERR.gallery
+      resetImageField();
+      resetTitleField();
+      resetCategoryField();
+      clearErrorMessage(
+        ERROR_IDS.upload,
+        ERROR_IDS.del,
+        ERROR_IDS.image,
+        ERROR_IDS.title,
+        ERROR_IDS.category,
+        ERROR_IDS.gallery
       );
     }
   }
@@ -624,15 +581,18 @@ export function exitModal() {
  *  Bloc: Modale – Galerie interne (step-one)
  *  ========================= */
 
-/** Monte la logique du champ image: preview, validation, accessibilité.
+/** Affiche la galerie interne de la modale (step-one) avec boutons “supprimer”.
  * @returns {void}
  */
 export function displayModalGallery(works) {
   const content = document.querySelector(".modal-gallery-content");
+
   if (!content) return;
   content.innerHTML = "";
+
   works.forEach(w => content.appendChild(createWorkFigure(w, { withDelete: true })));
-  wireModalDeleteDelegation();
+  
+  setupModalDeleteDelegation();
 }
 
 
@@ -648,10 +608,9 @@ export function displayModalGallery(works) {
  * @fires document#work:deleted
  * @returns {void}
  */
-function wireModalDeleteDelegation() {
+function setupModalDeleteDelegation() {
   const modalGallery = document.querySelector(".modal-gallery-content");
-  if (!modalGallery || modalGallery.dataset.boundDelete === "true") return;
-  modalGallery.dataset.boundDelete = "true";
+  if (!modalGallery) return;
 
   modalGallery.addEventListener("click", async (e)=> {
     const btn = e.target.closest(".delete-btn");
@@ -674,7 +633,7 @@ function wireModalDeleteDelegation() {
 
     try {
       await deleteWork(workIdStr, token);
-      clearErrors(ERR.del);
+      clearErrorMessage(ERROR_IDS.del);
 
       figure?.remove();
       galleryFigure?.remove();
@@ -684,7 +643,7 @@ function wireModalDeleteDelegation() {
       );
 
     } catch {
-      showApiError("delete", ERR.del);
+      showUiError("delete", ERROR_IDS.del);
     } finally {
       finish();
     }
@@ -701,14 +660,10 @@ function wireModalDeleteDelegation() {
 /**
  * Libère l’URL de prévisualisation associée à un <input type="file">.
  *
- * - Récupère l’URL stockée dans `input.dataset.previewURL`
- * - Appelle `URL.revokeObjectURL(url)` pour libérer la mémoire utilisée par l’aperçu
- * - Vide la valeur `dataset.previewURL` pour éviter de la réutiliser par erreur
- *
  * @param {HTMLInputElement} input - L’input file qui possède potentiellement une URL de preview
  * @returns {void}
  */
-function revokePreviewURLFromInput(input) {
+function revokePreviewURL(input) {
   const url = input?.dataset?.previewURL;
   if (url) {
     URL.revokeObjectURL(url);
@@ -718,16 +673,11 @@ function revokePreviewURLFromInput(input) {
 
 /**
  * Rend une image de prévisualisation interactive comme un bouton :
- * - Clique sur l’image => déclenche l’ouverture du sélecteur de fichier (fileInput.click())
- * - Rend l’image focusable au clavier (tabIndex = 0)
- * - Ajoute les attributs ARIA (role="button", aria-label="Changer l'image sélectionnée")
- * - Permet d’ouvrir le sélecteur avec la touche Enter
- *
  * @param {HTMLInputElement} fileInput - L’<input type="file"> associé
  * @param {HTMLImageElement} imageElement - L’image de prévisualisation à rendre interactive
  * @returns {void}
  */
-function attachImageClickToFileInput(fileInput, imageElement) {
+function makePreviewImageClickable(fileInput, imageElement) {
   imageElement.addEventListener("click", () => fileInput.click())
 
   imageElement.tabIndex = 0;
@@ -745,28 +695,19 @@ function attachImageClickToFileInput(fileInput, imageElement) {
 
 
 /**
- * Réinitialise le champ image du formulaire d’upload :
- * - Supprime l’URL de prévisualisation (via revokePreviewURLFromInput)
- * - Vide la valeur de l’<input type="file" id="image">
- * - Reconstruit le contenu du conteneur #form-group-header :
- *   → Icône placeholder
- *   → Label "ajouter photo" (avec gestion clavier Enter)
- *   → Infos format/poids
- *   → Réattache le fileInput à son label
- * - Supprime tout message d’erreur lié à l’image
- *
+ * Réinitialise le champ image du formulaire d’upload.
  * @returns {void}
  */
-function resetImagePreview() {
-  const formGroupHeader = document.getElementById("form-group-header");
+function resetImageField() {
+  const container = document.getElementById("form-group-header");
   const fileInput = document.getElementById("image");
 
-  if (!formGroupHeader || !fileInput) return;
+  if (!container || !fileInput) return;
 
-  revokePreviewURLFromInput(fileInput);
+  revokePreviewURL(fileInput);
   fileInput.value = "";
 
-  formGroupHeader.innerHTML = "";
+  container.innerHTML = "";
 
   const icon = document.createElement("i");
   icon.className = "fa-regular fa-image icon-placeholder";
@@ -787,120 +728,150 @@ function resetImagePreview() {
     if (e.key === "Enter") fileInput.click();
   });
 
-  formGroupHeader.append(icon, label, info);
+  container.append(icon, label, info);
   
-  clearErrors(ERR.image);
+  clearErrorMessage(ERROR_IDS.image);
 }
 
-
-/** ---- Validations step-two ---- */
 
 /**
- * Monte la logique du champ image du formulaire d’upload :
- * - Ajoute la gestion clavier (Enter sur le label déclenche le file picker)
- * - Gère le changement de fichier :
- *   → Valide le fichier via validateImageFile()
- *   → Réinitialise l’aperçu si invalide et affiche un message d’erreur
- *   → Crée une preview <img> cliquable si valide (avec URL.createObjectURL)
- * - Ajoute une validation supplémentaire sur le conteneur :
- *   → Vérifie qu’une image est bien présente lors du focusout/change
- *   → Affiche l’erreur "Veuillez ajouter une image" si nécessaire
- *
- * Évite les double-bindings grâce aux flags data-* (previewBound, imgValidationBound).
- *
+ * Crée/replace la prévisualisation d’image dans le container.
  * @returns {void}
  */
-export function mountImageField() {
-  const fileInput = document.getElementById("image");
-  const header    = document.getElementById("form-group-header");
-  const label     = document.querySelector(".upload-label");
-  if (!fileInput || !header || !label) return;
+function renderImagePreview(fileInput, container, file) {
+  revokePreviewURL(fileInput);
 
-  label.addEventListener("keydown", e => { if (e.key === "Enter") fileInput.click(); });
+  const url = URL.createObjectURL(file);
+  fileInput.dataset.previewURL = url;
 
-  if (fileInput.dataset.previewBound !== "true") {
-    fileInput.dataset.previewBound = "true";
-    fileInput.addEventListener("change", () => {
-      if (!fileInput.files || fileInput.files.length === 0) return;
-      clearErrors(ERR.image);
-      const file = fileInput.files[0];
-      const v = validateImageFile(file);
-      if (!v.ok) {
-        revokePreviewURLFromInput(fileInput);
-        fileInput.value = "";
-        resetImagePreview();
-        createErrorMessage(header, ERR.image, v.message);
-        label?.focus();
-        return;
-      }
-      revokePreviewURLFromInput(fileInput);
-      const url = URL.createObjectURL(file);
-      fileInput.dataset.previewURL = url;
-      header.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = url;
-      img.alt = `Prévisualisation de l'image ${cleanFileName(file.name)}`;
-      img.classList.add("preview-image");
-      attachImageClickToFileInput(fileInput, img);
-      header.append(fileInput, img);
-      img.focus();
-    });
-  }
+  const img = document.createElement("img");
+  img.src = url;
+  img.alt = `Prévisualisation de l'image ${cleanFileName(file.name)}`;
+  img.classList.add("preview-image");
 
-  if (header.dataset.imgValidationBound !== "true") {
-    header.dataset.imgValidationBound = "true";
-    const errId = "error-message-image";
-    const validate = () => {
-      const ok = header.querySelector(".preview-image") || (fileInput.files && fileInput.files.length > 0);
-      ok ? clearErrors(errId) : (!document.getElementById(errId) && createErrorMessage(header, errId, "Veuillez ajouter une image"));
-    };
-    header.addEventListener("focusout", (e) => {
-      const t = e.target;
-      if (t instanceof Element && t.closest(".upload-label")) validate();
-    });
-    fileInput.addEventListener("change", validate);
-  }
+  makePreviewImageClickable(fileInput, img);
+
+  container.innerHTML = "";
+  container.append(fileInput, img);
+
+  img.focus();
 }
 
 
-/** Monte la logique du champ titre: nettoyage, validation, a11y.
+/**
+ * Monte la logique du champ image de l’upload (step-two).
  * @returns {void}
  */
-export function mountTitleField() {
+export function setupImageField() {
+  const fileInput = document.getElementById("image");
+  const container = document.getElementById("form-group-header");
+  const label = document.querySelector(".upload-label");
+
+  if (!fileInput || !container || !label) return;
+
+  label.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") fileInput.click();
+  });
+
+  fileInput.addEventListener("change", () => {
+    if (!fileInput.files || fileInput.files.length === 0) return;
+
+    clearErrorMessage(ERROR_IDS.image);
+    const file = fileInput.files[0];
+
+    const v = validateImageFile(file);
+    if (!v.ok) {
+      revokePreviewURL(fileInput);
+      fileInput.value = "";
+      resetImageField();
+      renderErrorMessage(container, ERROR_IDS.image, v.message);
+      label.focus();
+      return;
+    }
+
+    renderImagePreview(fileInput, container, file);
+  });
+
+  const validatePresence = () => {
+    const hasImage = container.querySelector(".preview-image") || (fileInput.files && fileInput.files.length > 0);
+
+    hasImage
+      ? clearErrorMessage(ERROR_IDS.image)
+      : (!document.getElementById(ERROR_IDS.image) && renderErrorMessage(container, ERROR_IDS.image, UI_ERROR_MESSAGES.image));
+  };
+
+  container.addEventListener("focusout", (e) => {
+    const t = e.target;
+    if (t instanceof Element && t.closest(".upload-label")) validatePresence();
+  });
+
+  fileInput.addEventListener("change", validatePresence);
+}
+
+
+/** Monte la logique du champ titre: nettoyage, validation.
+ * @returns {void}
+ */
+export function setupTitleField() {
   const input = document.getElementById("title");
   if (!input) return;
 
   input.setAttribute("maxlength", "100");
-  const ALLOWED = /^[A-Za-zÀ-ÿ0-9\s\-'"`]$/u;
-  const cleanse = (t) =>
-    t.replace(/[^A-Za-zÀ-ÿ0-9 \-'"`]/gu, "")
-     .replace(/\s{2,}/g, " ").replace(/^\s+/g, "").slice(0, 100);
 
-  input.addEventListener("keypress", e => { if (!ALLOWED.test(e.key)) e.preventDefault(); });
-  input.addEventListener("paste", e => {
-    e.preventDefault();
-    const txt = (e.clipboardData || window.clipboardData).getData("text") || "";
-    const start = input.selectionStart ?? input.value.length;
-    const end   = input.selectionEnd ?? input.value.length;
-    input.value = (input.value.slice(0,start)+cleanse(txt)+input.value.slice(end)).slice(0,100);
-  });
+  const cleanse = (t) =>
+    String(t)
+      .replace(/[^A-Za-z0-9\s\u00C0-\u024F\-'"`]/gu, "")
+      .replace(/\s{2,}/g, " ")
+      .replace(/^\s+/g, "")
+      .slice(0, 100);
+
+  // Nettoyage + validation en continu
   input.addEventListener("input", () => {
     const c = cleanse(input.value);
     if (c !== input.value) input.value = c;
+    markTouched();
+    validate();
+  });
+
+  // Collage contrôlé : on intercepte, on nettoie et on replace le caret
+  input.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const txt = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd   ?? input.value.length;
+
+    const pasted = cleanse(txt);
+    const before = input.value.slice(0, start);
+    const after = input.value.slice(end);
+    const next = (before + pasted + after).slice(0, 100);
+
+    input.value = next;
+
+    const newCaret = Math.min(before.length + pasted.length, next.length);
+    input.setSelectionRange(newCaret, newCaret);
+
+    // Validation après collage
+    markTouched();
+    validate();
   });
 
   const container = document.getElementById("form-group-main");
-  const errId = "error-message-title";
   const touched = () => input.dataset.touched === "true";
-  const mark    = () => { input.dataset.touched = "true"; };
+  const markTouched = () => { input.dataset.touched = "true"; };
+
   const validate = () => {
     const v = input.value.trim();
-    if (!v) { touched() ? createErrorMessage(container, errId, "Veuillez saisir un titre") : clearErrors(errId); return; }
-    clearErrors(errId);
+    if (!v) {
+      touched()
+        ? renderErrorMessage(container, ERROR_IDS.title, UI_ERROR_MESSAGES.title)
+        : clearErrorMessage(ERROR_IDS.title);
+      return;
+    }
+
+    clearErrorMessage(ERROR_IDS.title);
   };
 
-  input.addEventListener("focus", mark);
-  input.addEventListener("input", () => { mark(); validate(); });
+  input.addEventListener("focus", markTouched);
   input.addEventListener("blur", validate);
 }
 
@@ -913,7 +884,7 @@ export function mountTitleField() {
  *
  * @returns {void}
  */
-function resetTitleInput() {
+function resetTitleField() {
   const titleInput = document.getElementById("title");
 
   if (titleInput) {
@@ -921,27 +892,26 @@ function resetTitleInput() {
     titleInput.dataset.touched = "false";
   }
 
-  clearErrors(ERR.title);
+  clearErrorMessage(ERROR_IDS.title);
 }
 
 
 /** Active la validation de la catégorie (message si vide).
  * @returns {void}
  */
-export function enableCategoryValidation() {
+export function setupCategoryValidation() {
   const categoryInput = document.getElementById("category");
   if (!categoryInput) return;
   
   const container = document.getElementById("form-group-footer");
-  const errorID = "error-message-category";
   
   const validate = () => {
     if (categoryInput.value === "") {
-      createErrorMessage(container, errorID, "Veuillez choisir une catégorie");
+      renderErrorMessage(container, ERROR_IDS.category, UI_ERROR_MESSAGES.category);
       return;
     }
     
-    clearErrors(errorID);
+    clearErrorMessage(ERROR_IDS.category);
   };
   
   categoryInput.addEventListener("change", validate);
@@ -956,38 +926,38 @@ export function enableCategoryValidation() {
  *
  * @returns {void}
  */
-function resetCategoryInput() {
+function resetCategoryField() {
   const categoryInput = document.getElementById("category");
 
   if (categoryInput) {
     categoryInput.value = "";
   }
 
-  clearErrors(ERR.category);
+  clearErrorMessage(ERROR_IDS.category);
 }
 
 
 /** Active l’état du bouton submit en fonction des champs.
  * @returns {void}
  */
-export function enableUploadFormValidation() {
+export function setupUploadButtonState() {
   const form = document.getElementById("upload-form");
   const fileInput = document.getElementById("image");
   const titleInput = document.getElementById("title");
   const categorySelect = document.getElementById("category");
-  const submitBtn = form?.querySelector(".btn-form-validate");
+  const submitBtn = form.querySelector(".btn-form-validate");
 
   if (!form || !fileInput || !titleInput || !categorySelect || !submitBtn) return;
 
   const updateState = () => {
-    const isValid =
-      fileInput.files && fileInput.files.length > 0 &&
-      titleInput.value.trim().length > 0 &&
-      categorySelect.value !== "";
+    const hasFile = !!fileInput.files?.length;
+    const hasTitle = titleInput.value.trim().length > 0;
+    const hasCategory = categorySelect.value !== "";
+    const isValid = hasFile && hasTitle && hasCategory
   
     submitBtn.disabled = !isValid;
-    submitBtn.classList.remove("btn-form-is-valid", "btn-form-not-valid");
-    submitBtn.classList.add(isValid?"btn-form-is-valid" : "btn-form-not-valid");
+    submitBtn.classList.toggle("btn-form-is-valid", isValid);
+    submitBtn.classList.toggle("btn-form-not-valid", !isValid);
   }
 
   updateState();
@@ -1003,18 +973,17 @@ export function enableUploadFormValidation() {
 /** Charge les catégories dans le <select> du step-two.
  * @returns {Promise<void>}
  */
-export async function populateCategorySelect() {
+export async function loadCategoryOptions() {
   const categorySelect = document.getElementById("category");
   if (!categorySelect) return;
   
   try {
     if (categorySelect.dataset.loaded === "true" && categorySelect.options.length > 1) {
-      clearErrors(ERR.category);
+      clearErrorMessage(ERROR_IDS.category);
       return;  
     }
     
     const categories = await getCategories();
-    clearErrors(ERR.category);
     
     categorySelect.innerHTML = "";
 
@@ -1034,72 +1003,77 @@ export async function populateCategorySelect() {
       categorySelect.appendChild(option);
     });
     categorySelect.dataset.loaded = "true";
+
   } catch {
-    showApiError("categories", ERR.category);
+    showUiError("categories", ERROR_IDS.category);
   }
 }
 
 
 /** ---- Soumission upload ---- */
 
-/** Soumet l’upload (FormData), met à jour les galeries et dispatch l’événement.
- * @fires document#work:created
+/**
+ * Soumet l’upload (FormData), met à jour les galeries
+ * et appelle le callback fourni avec le work créé.
+ *
+ * @param {(work: Work) => void} [onCreated] - Callback exécuté après création réussie
  * @returns {void}
  */
-export function handleUploadSubmit() {
+export function setupUploadSubmit(onCreated) {
   const form = document.getElementById("upload-form");
-  if (!form) return;
 
-  if (form.dataset.boundSubmit === "true") return;
-  form.dataset.boundSubmit = "true";
+  const modalGallery = document.querySelector(".modal-gallery-content");
+  const mainGallery = document.querySelector(".gallery");
+  const fileInput = document.getElementById("image");
+  const titleInput = document.getElementById("title");
+  const categorySel = document.getElementById("category");
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const submitBtn = form.querySelector(".btn-form-validate");
-    const fileInput = document.getElementById("image");
-    const titleInput = document.getElementById("title");
-    const categorySelect = document.getElementById("category");
-
-    const file = fileInput.files?.[0] || null; 
-    const title = titleInput.value.trim();
-    const category = categorySelect.value;
     
-    if (!file || !title || !category) return;
+    const submitBtn = form.querySelector(".btn-form-validate");
 
+    const file = fileInput?.files?.[0] || null;
+    const title = (titleInput?.value || "").trim();
+    const category = categorySel?.value || "";
+
+    if (!file || !title || !category) return;
     const v = validateImageFile(file);
     if (!v.ok) return;
 
-    submitBtn.disabled = true;
+    const normalizeWork = (work) => {
+      if (work?.category?.name) return work;
+      const opt = categorySel.selectedOptions[0];
 
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      fd.append("title", title);
-      fd.append("category", category);
-
-      const token = localStorage.getItem("token");
-      const newWork = await createWork(fd, token);
-
-      const selectedCategoryName = categorySelect.options[categorySelect.selectedIndex]?.textContent?.trim() || "";
-
-      const normalizedWork = {
-        ...newWork,
-        category:newWork?.category?.name
-        ? newWork.category
-        : { id: Number(category), name: selectedCategoryName }
+      return {
+        ...work,
+        category: {
+          id: Number(category),
+          name: opt.textContent
+        }
       };
+    };
 
-      document.querySelector(".gallery").appendChild(createWorkFigure(normalizedWork));
+    const fd = new FormData();
+    fd.append("image", file);
+    fd.append("title", title);
+    fd.append("category", category);
 
-      document.querySelector(".modal-gallery-content").appendChild(createWorkFigure(normalizedWork, { withDelete: true }));
+    submitBtn.disabled = true;
+    try {
+      const token = localStorage.getItem("token");
+      const created = await createWork(fd, token);
+      const work = normalizeWork(created);
 
-      document.dispatchEvent(new CustomEvent("work:created", { detail: normalizedWork }));
+      modalGallery?.appendChild(createWorkFigure(work, { withDelete: true }));
+      mainGallery?.appendChild(createWorkFigure(work));
+
+      if (typeof onCreated === "function") onCreated(work);
 
       document.querySelector(".modal-icon-close")?.click();
-      
+
     } catch {
-      showApiError("upload", ERR.upload);
+      showUiError("upload", ERROR_IDS.upload);
     } finally {
       submitBtn.disabled = false;
     }

@@ -1,48 +1,31 @@
 // ./js/script/utils.js
 
-/** @typedef {import("./dom.js").Work} Work */
-/** @typedef {import("./dom.js").Category} Category */
+
+/* =========================================================
+ * CONSTANTES — messages d’erreurs UI
+ * =======================================================*/
+
+// Table de messages UI (au niveau module)
+export const UI_ERROR_MESSAGES = Object.freeze({
+  categories: "Impossible de charger les catégories.",
+  category: "Veuillez choisir une catégorie",
+  delete: "Suppression échouée. Veuillez réessayer plus tard.",
+  email: "Adresse email invalide.",
+  extension: "Formats acceptés : JPEG ou PNG.",
+  form: "Veuillez remplir tous les champs.",
+  gallery: "Impossible de charger les projets. Veuillez réessayer plus tard.",
+  generic: "Une erreur est survenue. Réessayez plus tard.",
+  image: "Veuillez ajouter une image",
+  login: "Identifiants incorrects. Veuillez réessayer.",
+  title: "Veuillez saisir un titre",
+  size: "Image trop lourde (4 Mo max).",
+  upload: "Échec de l’envoi. Veuillez réessayer plus tard."
+});
 
 
-/**
- * Retourne les catégories uniques (par id) à partir des works.
- * @param {Work[]} works
- * @returns {Category[]}
- */
-export function getUniqueCategories(works) {
-  const seen = new Set();
-  /** @type {Category[]} */
-  const out = [];
-
-  for (const w of (Array.isArray(works) ? works : [])) {
-    const c = w?.category || null;
-    const id = (c && c.id != null) ? c.id : (w?.categoryId != null ? w.categoryId : null);
-    if (id == null) continue;
-
-    const key = String(id);
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    out.push({
-      id,
-      name: (c && typeof c.name === "string") ? c.name : ""
-    });
-  }
-  return out;
-}
-
-
-/**
- * Lit `?category=...` et renvoie le slug en minuscule (ou null).
- * @returns {string|null}
- */
-export function getCategoryNameFromQueryParam () {
-  const params = new URLSearchParams(window.location.search);
-  const selectedCategory = params.get("category");
-
-  return (!selectedCategory || selectedCategory === "all") ? null : selectedCategory.toLowerCase();
-}
-
+/* =========================================================
+ * STRINGS — formatage de chaînes (slugs, noms de fichiers)
+ * =======================================================*/
 
 /**
  * Convertit un texte en slug URL-safe.
@@ -61,6 +44,39 @@ export function slugify(text) {
 }
 
 
+/**
+ * Nettoie un nom de fichier pour affichage/alt.
+ * @param {string} fileName
+ * @returns {string}
+ */
+export function cleanFileName(fileName) {
+  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, ""); // Supprime l'extension du fichier
+  const cleanedName = nameWithoutExt.replace(/[^a-zA-ZÀ-ÿ0-9\s\-']/g, " "); // Remplace tout caractère qui n’est PAS une lettre (a-z, A-Z, accentuée), chiffre, espace, tiret ou apostrophe par un espace
+  return cleanedName.length > 100
+   ? cleanedName.slice(0,100) + "..."
+   :cleanedName;
+}
+
+
+/* =========================================================
+ * URL — lecture/écriture de paramètres d’URL
+ * =======================================================*/
+
+/**
+ * Lit `?category=...` et renvoie le slug en minuscule (ou null).
+ * @returns {string|null}
+ */
+export function getCategoryNameFromQueryParam () {
+  const params = new URLSearchParams(window.location.search);
+  const selectedCategory = params.get("category");
+
+  return (!selectedCategory || selectedCategory === "all") ? null : selectedCategory.toLowerCase();
+}
+
+
+/* =========================================================
+ * AUTH — état d’authentification & déconnexion
+ * =======================================================*/
 
 /**
  * Indique si un token d’auth existe en localStorage.
@@ -74,7 +90,7 @@ export function isLogIn() {
 /**
  * Attache le handler de déconnexion (si connecté).
  * @param {boolean} isAuth
- * @returns {void}
+ * @returns {void} Ne retourne rien
  */
 export function logOut(isAuth) {
   const logoutLink = document.getElementById("link-login");
@@ -92,19 +108,32 @@ export function logOut(isAuth) {
 }
 
 
+/* =========================================================
+ * DOM — petits helpers DOM génériques
+ * =======================================================*/
+
 /**
- * Nettoie un nom de fichier pour affichage/alt.
- * @param {string} fileName
- * @returns {string}
+ * Crée un élément avec attributs et texte.
+ * @param {keyof HTMLElementTagNameMap} tag
+ * @param {Record<string, string>} [attributes={}]
+ * @param {string} [textContent=""]
+ * @returns {HTMLElement}
  */
-export function cleanFileName(fileName) {
-  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
-  const cleanedName = nameWithoutExt.replace(/[^a-zA-ZÀ-ÿ0-9\s\-']/g, " ");
-  return cleanedName.length > 100
-   ? cleanedName.slice(0,100) + "..."
-   :cleanedName;
+export function createElement(tag, attributes = {}, textContent = "") {
+  const element = document.createElement(tag);
+  Object.entries(attributes).forEach(([key, value]) => {
+    element.setAttribute(key, value);
+  });
+  if (textContent != undefined && textContent !== null) {
+    element.textContent = String(textContent);
+  }
+  return element;
 }
 
+
+/* =========================================================
+ * VALIDATION — contrôles de fichiers & formulaires
+ * =======================================================*/
 
 /**
  * Valide un fichier image (type/poids).
@@ -116,25 +145,10 @@ export function validateImageFile(file) {
   const ALLOWED = ["image/jpeg", "image/png"];
 
   if (!ALLOWED.includes(file.type)) {
-    return {ok: false, message: UI_ERROR_MSG.extension};
+    return {ok: false, message: UI_ERROR_MESSAGES.extension};
   }
   if (file.size > MAX) {
-    return {ok: false, message: UI_ERROR_MSG.size}
+    return {ok: false, message: UI_ERROR_MESSAGES.size}
   }
   return { ok: true};
 }
-
-
-// Table de messages UI (au niveau module)
-export const UI_ERROR_MSG = {
-  delete: "Suppression échouée. Veuillez réessayer plus tard.",
-  upload: "Échec de l’envoi. Veuillez réessayer plus tard.",
-  categories: "Impossible de charger les catégories.",
-  gallery: "Impossible de charger les projets. Veuillez réessayer plus tard.",
-  form: "Veuillez remplir tous les champs.",
-  email: "Adresse email invalide.",
-  login: "Identifiants incorrects. Veuillez réessayer.",
-  extension: "Formats acceptés : JPEG ou PNG.",
-  size: "Image trop lourde (4 Mo max).",
-  generic: "Une erreur est survenue. Réessayez plus tard."
-};

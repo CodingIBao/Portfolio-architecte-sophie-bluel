@@ -78,6 +78,56 @@ Ce repository contient les deux briques du projet :
 
 ⚠️ Laissez ce terminal tourner pendant que vous développez/testez.
 
+## 📡 Endpoints de l’API (rappel)
+
+_Base URL :_ `http://localhost:5678`
+
+| Méthode | Route              | Description                                                                 |
+| ------: | ------------------ | --------------------------------------------------------------------------- |
+|     GET | `/api/works`       | Liste des projets                                                           |
+|     GET | `/api/categories`  | Liste des catégories                                                        |
+|    POST | `/api/users/login` | Authentification (email, password → token JWT)                              |
+|    POST | `/api/works`       | Création d’un projet (**Auth: Bearer** + FormData : image, title, category) |
+|  DELETE | `/api/works/:id`   | Suppression d’un projet (**Auth: Bearer**)                                  |
+
+## 🔐 Authentification & Token (JWT)
+
+- **Login** : `POST /api/users/login` avec `{ email, password }`  
+  → réponse : `{ userId, token }`
+- **Stockage** (exercice) : le token est sauvegardé dans `localStorage` (`localStorage.token`)
+- **Utilisation** : envoyer `Authorization: Bearer <token>` sur les routes protégées (`POST /api/works`, `DELETE /api/works/:id`)
+- **Déconnexion** : suppression du token (`localStorage.removeItem("token")`) et redirection vers `login.html`
+- **Erreurs** :
+  - `400/401` → identifiants invalides (affichage `UI_ERROR_MESSAGES.login`)
+  - autres → message générique (`UI_ERROR_MESSAGES.generic`)
+
+### Exemples
+
+**Login (cURL)**
+
+```bash
+curl -X POST http://localhost:5678/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"sophie.bluel@test.tld","password":"S0phie"}'
+
+DELETE /works/:id (avec token)
+
+TOKEN="copiez_le_token_ici"
+curl -X DELETE http://localhost:5678/api/works/123 \
+  -H "Authorization: Bearer $TOKEN"
+
+POST /works (upload avec token)
+TOKEN="copiez_le_token_ici"
+curl -X POST http://localhost:5678/api/works \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "image=@/chemin/vers/photo.jpg" \
+  -F "title=Mon projet" \
+  -F "category=2"
+
+
+🔒 Note sécu (pédagogique) : le token est stocké dans localStorage pour l’exercice.
+En production, on privilégie un cookie httpOnly géré côté serveur.
+
 ---
 
 ### 🖼️ Frontend
@@ -85,8 +135,8 @@ Ce repository contient les deux briques du projet :
 1. Ouvrez le dossier `Frontend/`
 2. Lancez **Live Server** depuis votre IDE ou servez le dossier avec un serveur statique
 3. Accédez à :
-   - [http://localhost:5500/index.html](#) → Page d’accueil (galerie)
-   - [http://localhost:5500/login.html](#) → Page de connexion admin
+   - http://localhost:5500/index.html → Page d’accueil (galerie)
+   - http://localhost:5500/login.html → Page de connexion admin
 
 💡 Astuce : ouvrez **2 instances de VSCode** (une pour `Backend/`, une pour `Frontend/`) pour éviter toute confusion.
 
@@ -98,6 +148,7 @@ Ce repository contient les deux briques du projet :
 - **Filtres par catégorie** : générés dynamiquement (`/categories`), synchro avec l’URL `?category=...`
 - **Connexion admin** :
   - Page login (maquette respectée)
+  - Indication de la page active (`aria-current="page"`) sur le lien Login
   - Validation email/mot de passe
   - `POST /users/login`, stockage du JWT dans `localStorage`
   - Gestion UI (login/logout)
@@ -109,8 +160,8 @@ Ce repository contient les deux briques du projet :
     - Validation : type/poids image, titre (100 chars max, nettoyage), catégorie requise
     - `FormData` → `POST /works`
     - Ajout dynamique dans les deux galeries sans reload
-- **Événements personnalisés** :
-  - `work:created` et `work:deleted` → pour tenir synchro filtres + galerie
+- **Événement personnalisé** :
+  - `work:deleted` → tenir la galerie et l’état en synchro après suppression
 - **Accessibilité (a11y)** :
   - Messages d’erreur avec `role="alert"`, `aria-live`
   - `aria-busy` sur suppression
@@ -140,9 +191,10 @@ Ce repository contient les deux briques du projet :
 - Code commenté avec **JSDoc** (API helpers, DOM utils, validations, modale…)
 - Séparation claire :
   - `api.js` → appels HTTP (fetchData)
-  - `utils.js` → helpers (slugify, validations, UI_ERROR_MSG…)
+  - `utils.js` → helpers (slugify, validations, UI_ERROR_MESSAGES…)
   - `dom.js` → gestion DOM (galerie, modale, erreurs, validations)
   - `main.js` → bootstrap accueil
   - `login.js` → logique page connexion
 
 ---
+```

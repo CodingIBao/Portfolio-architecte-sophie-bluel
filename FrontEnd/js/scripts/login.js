@@ -1,8 +1,18 @@
-// ./js/script/login.js
+// ./js/scripts/login.js
 
-import { loginUser } from "./api.js";
-import { logOut, isLogIn, UI_ERROR_MSG } from "./utils.js";
-import { domModificationLogIn } from "./dom.js";
+import {
+  loginUser 
+} from "./api.js";
+
+import { 
+  logOut, 
+  isLogIn, 
+  UI_ERROR_MESSAGES 
+} from "./utils.js";
+
+import { 
+  domModificationLogIn
+} from "./dom.js";
 
 /**
  * @file login.js
@@ -18,7 +28,7 @@ import { domModificationLogIn } from "./dom.js";
  * @throws {Error} Si `#login-form` est introuvable.
  */
 const form = document.getElementById("login-form");
-if (!form) throw new Error("Form #login-form introuvable");
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -38,17 +48,21 @@ form.addEventListener("submit", async (e) => {
   const password = passwordInput.value;
 
   if (!email || !password) {
-    if (errorElement) errorElement.textContent = UI_ERROR_MSG.form;
+    if (errorElement) errorElement.textContent = UI_ERROR_MESSAGES.form;
+
     (email ? passwordInput : emailInput).focus();
+
     if (submitBtn) submitBtn.disabled = false;
     return;
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    if (errorElement) errorElement.textContent = UI_ERROR_MSG.email;
+
+    if (errorElement) errorElement.textContent = UI_ERROR_MESSAGES.email;
     emailInput.focus();
     emailInput.select?.();
+
     if (submitBtn) submitBtn.disabled = false;
     return;
   }
@@ -61,13 +75,16 @@ form.addEventListener("submit", async (e) => {
 
   } catch (error) {
     if (!errorElement) return;
+
     let msg = "";
     if (error?.status === 401 || error?.status === 400) {
-      msg = UI_ERROR_MSG.login;
+      msg = UI_ERROR_MESSAGES.login;
+
     } else {
-      msg = UI_ERROR_MSG.generic;
+      msg = UI_ERROR_MESSAGES.generic;
     }
     errorElement.textContent = msg;
+
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }
@@ -75,6 +92,7 @@ form.addEventListener("submit", async (e) => {
 
 (async function init() {
   const isAuth = isLogIn();
+  
   logOut(isAuth);
   domModificationLogIn(isAuth);
 })();

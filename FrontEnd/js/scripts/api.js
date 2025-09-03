@@ -53,7 +53,7 @@ export async function deleteWork(id, token) {
  * @function loginUser
  * @param {string} email - Adresse e-mail de l'utilisateur.
  * @param {string} password - Mot de passe.
- * @returns {Promise<{ token: string }>} Objet contenant le jeton d'authentification.
+ * @returns {Promise<{ userId:number, token:string }>}
  *
  * - Si `response.ok` est faux, lève une `Error` avec un message provenant du backend si disponible, sinon générique.
  */
@@ -97,9 +97,8 @@ function isFormData(body) {
  * Comportement :
  * - Sérialise automatiquement `body` en JSON si c'est un objet simple.
  * - Accepte `FormData` sans forcer le `Content-Type`.
- * - Accepte une chaîne ou un `Blob` tel quel.
  * - Si `response.ok` est faux, lève une `Error` avec un message générique.
- * - Retourne JSON si `Content-Type` contient `application/json`, sinon texte brut.
+ * - Retourne le JSON si `Content-Type` contient `application/json`, sinon `undefined`.
  * - Retourne `undefined` si le statut est `204 No Content`.
  *
  * @async
@@ -119,15 +118,14 @@ export async function fetchData(
 ) {
   const init = {
     method: String(method).toUpperCase(),
-    headers: { Accept: "application/json", ...headers },
+    headers: { ...headers },
   };
 
   if (body != null) {
     if (isFormData(body)) {
       init.body = body;
-
       delete init.headers["Content-Type"];
-      delete init.headers["content-type"];
+      
     } else {
       init.headers["Content-Type"] = init.headers["Content-Type"] || "application/json";
       init.body = JSON.stringify(body);
@@ -137,7 +135,7 @@ export async function fetchData(
   const response = await fetch(url, init);
 
   if (!response.ok) {
-    const err = new Error("Une erreur est survenue. réessayez plus tard.");
+    const err = new Error("Une erreur est survenue. Réessayez plus tard.");
     err.status = response.status;
     throw err;
   }
@@ -145,8 +143,7 @@ export async function fetchData(
   if (response.status === 204) return;
 
   const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
+  if(!contentType.includes("application/json")) return;
 
-  return contentType.includes("application/json")
-  ? response.json()
-  : response.text();
+  return response.json();
 }
